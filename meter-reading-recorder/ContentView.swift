@@ -6,67 +6,90 @@ import CoreData
 // MARK: - Content View
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \MeterReading.date, ascending: false)],
-        animation: .default)
-    private var readings: FetchedResults<MeterReading>
-    
+
     @State private var showCamera = false
-    @State private var selectedMeterType: MeterType?
+    @State private var recognizedValue: String? = nil
+    @State private var capturedImage: UIImage? = nil
+    @State private var showTypeSelector = false
+    
+    // Accent colors array for cycling
+    private let accentColors: [Color] = [.meterAccent1, .meterAccent2, .meterAccent3, .meterAccent4]
     
     var body: some View {
         NavigationView {
             VStack {
-                // Liste der Zählerstände
                 List {
-                    ForEach(MeterType.allCases, id: \.self) { type in
-                        Section(header: Text(type.displayName)) {
-                            ForEach(readings.filter { $0.meterType == type.rawValue }) { reading in
-                                ReadingRow(reading: reading)
-                            }
+                    ForEach(Array(MeterType.allCases.enumerated()), id: \.element) { index, type in
+                        NavigationLink(destination: MeterTypeReadingsView(type: type)) {
+                            Text(type.displayName)
+                                .foregroundColor(.black) // Basic text in black
+                                .font(.headline) // Prominent headline font
+                                .padding(.vertical, 8) // Vertical padding for better touch area
+                                .frame(maxWidth: .infinity, alignment: .leading) // Align text to leading with full width
+                                .background(accentColors[index % accentColors.count].opacity(0.15)) // Subtle background color cycling through accent colors
+                                .cornerRadius(8)
                         }
+                        .listRowBackground(Color.clear) // Clear default listrow background to show custom bg
                     }
                 }
+                .navigationTitle("Zählerstände")
                 
-                // Kamera-Button
                 Button(action: { showCamera = true }) {
                     Label("Zählerstand erfassen", systemImage: "camera.fill")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
+                        .background(Color.meterAccent3) // Use meterAccent3 as background for main button
+                        .foregroundColor(.white) // White text for contrast
                         .cornerRadius(10)
                 }
                 .padding()
             }
-            .navigationTitle("Zählerstände")
             .sheet(isPresented: $showCamera) {
                 CameraView { image in
                     processImage(image)
+                }
+            }
+            .confirmationDialog("Zählertyp auswählen", isPresented: $showTypeSelector, titleVisibility: .visible) {
+                ForEach(MeterType.allCases, id: \.self) { type in
+                    Button(type.displayName) {
+                        if let value = recognizedValue, let image = capturedImage {
+                            saveReading(value: value, type: type, image: image)
+                        }
+                        recognizedValue = nil
+                        capturedImage = nil
+                        showTypeSelector = false
+                    }
+                }
+                Button("Abbrechen", role: .cancel) {
+                    recognizedValue = nil
+                    capturedImage = nil
+                    showTypeSelector = false
                 }
             }
         }
     }
     
     func processImage(_ image: UIImage) {
-        // OCR durchführen
-        recognizeText(in: image) { recognizedNumbers, detectedType in
-            if let numbers = recognizedNumbers, let type = detectedType {
-                saveReading(value: numbers, type: type, image: image)
+        // OCR durchführen und nur Zahlen extrahieren
+        recognizeText(in: image) { recognizedNumber in
+            if let number = recognizedNumber {
+                recognizedValue = number
+                capturedImage = image
+                showTypeSelector = true
             }
         }
     }
     
-    func recognizeText(in image: UIImage, completion: @escaping (String?, MeterType?) -> Void) {
+    func recognizeText(in image: UIImage, completion: @escaping (String?) -> Void) {
         guard let cgImage = image.cgImage else {
-            completion(nil, nil)
+            completion(nil)
             return
         }
         
         let request = VNRecognizeTextRequest { request, error in
             guard let observations = request.results as? [VNRecognizedTextObservation] else {
-                completion(nil, nil)
+                completion(nil)
                 return
             }
             
@@ -74,11 +97,10 @@ struct ContentView: View {
                 observation.topCandidates(1).first?.string
             }
             
-            // Extrahiere Zahlen und erkenne Zählertyp
+            // Nur Zahlen extrahieren, ohne Zählertyp-Erkennung
             let numbers = extractNumbers(from: recognizedStrings)
-            let meterType = detectMeterType(from: recognizedStrings)
             
-            completion(numbers, meterType)
+            completion(numbers)
         }
         
         request.recognitionLevel = .accurate
@@ -97,19 +119,6 @@ struct ContentView: View {
         return nil
     }
     
-    func detectMeterType(from strings: [String]) -> MeterType? {
-        let combinedText = strings.joined(separator: " ").lowercased()
-        
-        if combinedText.contains("wasser") || combinedText.contains("water") {
-            return .water
-        } else if combinedText.contains("strom") || combinedText.contains("electric") || combinedText.contains("kwh") {
-            return .electricity
-        } else if combinedText.contains("gas") {
-            return .gas
-        }
-        return nil
-    }
-    
     func saveReading(value: String, type: MeterType, image: UIImage) {
         let newReading = MeterReading(context: viewContext)
         newReading.id = UUID()
@@ -119,6 +128,59 @@ struct ContentView: View {
         newReading.imageData = image.jpegData(compressionQuality: 0.7)
         
         try? viewContext.save()
+    }
+}
+
+// MARK: - MeterTypeReadingsView
+struct MeterTypeReadingsView: View {
+    let type: MeterType
+    
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest var readings: FetchedResults<MeterReading>
+    
+    init(type: MeterType) {
+        self.type = type
+        _readings = FetchRequest<MeterReading>(
+            sortDescriptors: [NSSortDescriptor(keyPath: \MeterReading.date, ascending: false)],
+            predicate: NSPredicate(format: "meterType == %@", type.rawValue),
+            animation: .default
+        )
+    }
+    
+    var body: some View {
+        List {
+            ForEach(readings) { reading in
+                ReadingRow(reading: reading)
+            }
+        }
+        .navigationTitle(type.displayName)
+    }
+}
+
+// MARK: - Reading Row
+struct ReadingRow: View {
+    let reading: MeterReading
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(reading.value ?? "N/A")
+                    .font(.headline)
+                    .foregroundColor(.black) // Basic value text in black
+                
+                Text(reading.date ?? Date(), style: .date)
+                    .font(.caption)
+                    .foregroundColor(Color.meterAccent1.opacity(0.7)) // Subtle accent color for date
+            }
+            Spacer()
+            if let imageData = reading.imageData, let image = UIImage(data: imageData) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .cornerRadius(8)
+            }
+        }
     }
 }
 
@@ -156,31 +218,6 @@ struct CameraView: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Reading Row
-struct ReadingRow: View {
-    let reading: MeterReading
-    
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(reading.value ?? "N/A")
-                    .font(.headline)
-                Text(reading.date ?? Date(), style: .date)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-            Spacer()
-            if let imageData = reading.imageData, let image = UIImage(data: imageData) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 60, height: 60)
-                    .cornerRadius(8)
-            }
-        }
-    }
-}
-
 // MARK: - Meter Type Enum
 enum MeterType: String, CaseIterable {
     case water = "water"
@@ -195,3 +232,11 @@ enum MeterType: String, CaseIterable {
         }
     }
 }
+// MARK: - Color Extension for Meter Accent Colors
+extension Color {
+    static let meterAccent1 = Color(red: 0/255, green: 84/255, blue: 97/255) // #005461
+    static let meterAccent2 = Color(red: 12/255, green: 119/255, blue: 121/255) // #0C7779
+    static let meterAccent3 = Color(red: 36/255, green: 158/255, blue: 148/255) // #249E94
+    static let meterAccent4 = Color(red: 59/255, green: 193/255, blue: 168/255) // #3BC1A8
+}
+
