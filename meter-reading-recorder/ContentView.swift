@@ -99,7 +99,7 @@ struct ContentView: View {
                         Text("Erkannten Wert bearbeiten")
                             .font(.headline)
                         TextField("Zählerstand", text: $editedValue)
-                            .keyboardType(.numberPad)
+                            .keyboardType(.decimalPad)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding(.horizontal)
                         Spacer()
@@ -112,13 +112,23 @@ struct ContentView: View {
                         }
                         ToolbarItem(placement: .confirmationAction) {
                             Button("Übernehmen") {
-                                let onlyDigits = editedValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-                                if !onlyDigits.isEmpty {
-                                    recognizedValue = onlyDigits
+                                // Allow digits and a single decimal separator (comma or dot), normalize to dot
+                                var filtered = editedValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                filtered = filtered.replacingOccurrences(of: ",", with: ".")
+                                // Keep only digits and dots
+                                filtered = filtered.components(separatedBy: CharacterSet(charactersIn: "0123456789.").inverted).joined()
+                                // Ensure at most one dot
+                                if let firstDot = filtered.firstIndex(of: ".") {
+                                    let after = filtered[filtered.index(after: firstDot)...].replacingOccurrences(of: ".", with: "")
+                                    filtered = String(filtered[..<filtered.index(after: firstDot)]) + after
+                                }
+                                let digitsOnly = filtered.replacingOccurrences(of: ".", with: "")
+                                if !digitsOnly.isEmpty {
+                                    recognizedValue = filtered
                                     showEditSheet = false
                                     showSuccessAlert = true
                                 } else {
-                                    // If result is empty, keep sheet open or you could show an error; here we keep it simple
+                                    // keep sheet open for correction
                                 }
                             }
                         }
@@ -190,10 +200,23 @@ struct ContentView: View {
     }
     
     func extractNumbers(from strings: [String]) -> String? {
+        // Allow digits with a single decimal separator (comma or dot)
+        let pattern = "^\\d{1,}[.,]?\\d{0,}$"
         for string in strings {
-            let numbers = string.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-            if numbers.count >= 4 { // Mindestens 4-stellige Zahl
-                return numbers
+            // Remove spaces and non relevant characters except digits, comma and dot
+            let allowed = string.components(separatedBy: CharacterSet(charactersIn: "0123456789.,").inverted).joined()
+            // Normalize multiple separators and keep only the first one
+            var normalized = allowed.replacingOccurrences(of: ",", with: ".")
+            // If there are multiple dots, keep first and remove the rest
+            if let firstDotRange = normalized.range(of: ".") {
+                let before = normalized[..<firstDotRange.upperBound]
+                let after = normalized[firstDotRange.upperBound...].replacingOccurrences(of: ".", with: "")
+                normalized = String(before + after)
+            }
+            // Validate against pattern and require at least 4 characters ignoring the dot
+            let digitsOnly = normalized.replacingOccurrences(of: ".", with: "")
+            if digitsOnly.count >= 4, normalized.range(of: pattern, options: .regularExpression) != nil {
+                return normalized
             }
         }
         return nil
