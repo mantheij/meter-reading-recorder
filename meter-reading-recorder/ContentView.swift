@@ -33,7 +33,14 @@ struct ContentView: View {
                         .listRowBackground(Color.clear) // Clear default listrow background to show custom bg
                     }
                 }
-                .navigationTitle("Zählerstände")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Text("Zählerstände")
+                            .font(.largeTitle).bold()
+                            .offset(y: 24)
+                    }
+                }
                 
                 Button(action: { showCamera = true }) {
                     Label("Zählerstand erfassen", systemImage: "camera.fill")
