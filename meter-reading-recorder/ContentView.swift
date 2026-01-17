@@ -24,9 +24,10 @@ struct ContentView: View {
                             Text(type.displayName)
                                 .foregroundColor(.black) // Basic text in black
                                 .font(.headline) // Prominent headline font
-                                .padding(.vertical, 8) // Vertical padding for better touch area
-                                .frame(maxWidth: .infinity, alignment: .leading) // Align text to leading with full width
-                                .background(accentColors[index % accentColors.count].opacity(0.15)) // Subtle background color cycling through accent colors
+                                .padding(.vertical, 8)
+                                .padding(.leading, 12)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(accentColors[index % accentColors.count].opacity(0.15))
                                 .cornerRadius(8)
                         }
                         .listRowBackground(Color.clear) // Clear default listrow background to show custom bg
