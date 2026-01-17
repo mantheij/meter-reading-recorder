@@ -13,6 +13,8 @@ struct ContentView: View {
     @State private var showTypeSelector = false
     @State private var showSuccessAlert = false
     @State private var showErrorAlert = false
+    @State private var showEditSheet = false
+    @State private var editedValue: String = ""
     
     // Accent colors array for cycling
     private let accentColors: [Color] = [.meterAccent1, .meterAccent2, .meterAccent3, .meterAccent4]
@@ -65,6 +67,10 @@ struct ContentView: View {
                 Button("Bestätigen") {
                     showTypeSelector = true
                 }
+                Button("Bearbeiten") {
+                    editedValue = recognizedValue ?? ""
+                    showEditSheet = true
+                }
                 Button("Erneut fotografieren", role: .cancel) {
                     recognizedValue = nil
                     capturedImage = nil
@@ -87,6 +93,38 @@ struct ContentView: View {
             }, message: {
                 Text("Die Zahl konnte nicht erkannt werden. Bitte erneut fotografieren.")
             })
+            .sheet(isPresented: $showEditSheet) {
+                NavigationView {
+                    VStack(spacing: 16) {
+                        Text("Erkannten Wert bearbeiten")
+                            .font(.headline)
+                        TextField("Zählerstand", text: $editedValue)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.horizontal)
+                        Spacer()
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Abbrechen") {
+                                showEditSheet = false
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Übernehmen") {
+                                let onlyDigits = editedValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                                if !onlyDigits.isEmpty {
+                                    recognizedValue = onlyDigits
+                                    showEditSheet = false
+                                    showSuccessAlert = true
+                                } else {
+                                    // If result is empty, keep sheet open or you could show an error; here we keep it simple
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             .confirmationDialog("Zählertyp auswählen", isPresented: $showTypeSelector, titleVisibility: .visible) {
                 ForEach(MeterType.allCases, id: \.self) { type in
                     Button(type.displayName) {
