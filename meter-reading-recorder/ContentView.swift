@@ -11,6 +11,8 @@ struct ContentView: View {
     @State private var recognizedValue: String? = nil
     @State private var capturedImage: UIImage? = nil
     @State private var showTypeSelector = false
+    @State private var showSuccessAlert = false
+    @State private var showErrorAlert = false
     
     // Accent colors array for cycling
     private let accentColors: [Color] = [.meterAccent1, .meterAccent2, .meterAccent3, .meterAccent4]
@@ -59,6 +61,32 @@ struct ContentView: View {
                 }
                 .ignoresSafeArea()
             }
+            .alert("Erkennung erfolgreich", isPresented: $showSuccessAlert, actions: {
+                Button("Bestätigen") {
+                    showTypeSelector = true
+                }
+                Button("Erneut fotografieren", role: .cancel) {
+                    recognizedValue = nil
+                    capturedImage = nil
+                    showCamera = true
+                }
+            }, message: {
+                if let value = recognizedValue {
+                    Text("Erkannte Zahl: \(value)\nBitte bestätigen.")
+                } else {
+                    Text("Erkannte Zahl ist nicht verfügbar.")
+                }
+            })
+            .alert("Erkennung fehlgeschlagen", isPresented: $showErrorAlert, actions: {
+                Button("Erneut fotografieren") {
+                    recognizedValue = nil
+                    capturedImage = nil
+                    showCamera = true
+                }
+                Button("Abbrechen", role: .cancel) {}
+            }, message: {
+                Text("Die Zahl konnte nicht erkannt werden. Bitte erneut fotografieren.")
+            })
             .confirmationDialog("Zählertyp auswählen", isPresented: $showTypeSelector, titleVisibility: .visible) {
                 ForEach(MeterType.allCases, id: \.self) { type in
                     Button(type.displayName) {
@@ -85,7 +113,11 @@ struct ContentView: View {
             if let number = recognizedNumber {
                 recognizedValue = number
                 capturedImage = image
-                showTypeSelector = true
+                showSuccessAlert = true
+            } else {
+                recognizedValue = nil
+                capturedImage = nil
+                showErrorAlert = true
             }
         }
     }
@@ -113,6 +145,7 @@ struct ContentView: View {
         }
         
         request.recognitionLevel = .accurate
+        request.recognitionLanguages = ["de-DE", "en-US"]
         
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
         try? handler.perform([request])
