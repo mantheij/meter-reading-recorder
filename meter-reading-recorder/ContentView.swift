@@ -53,10 +53,11 @@ struct ContentView: View {
                 }
                 .padding()
             }
-            .sheet(isPresented: $showCamera) {
+            .fullScreenCover(isPresented: $showCamera) {
                 CameraView { image in
                     processImage(image)
                 }
+                .ignoresSafeArea()
             }
             .confirmationDialog("Zählertyp auswählen", isPresented: $showTypeSelector, titleVisibility: .visible) {
                 ForEach(MeterType.allCases, id: \.self) { type in
@@ -199,6 +200,7 @@ struct CameraView: UIViewControllerRepresentable {
     
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
+        picker.modalPresentationStyle = .fullScreen
         picker.sourceType = .camera
         picker.delegate = context.coordinator
         return picker
