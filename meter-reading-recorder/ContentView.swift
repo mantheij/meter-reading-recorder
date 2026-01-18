@@ -246,6 +246,9 @@ struct MeterTypeReadingsView: View {
     @Environment(\.colorScheme) private var colorScheme
     @FetchRequest var readings: FetchedResults<MeterReading>
     
+    @State private var showDeleteConfirmation: Bool = false
+    @State private var pendingDeletion: MeterReading? = nil
+    
     init(type: MeterType) {
         self.type = type
         _readings = FetchRequest<MeterReading>(
@@ -259,7 +262,29 @@ struct MeterTypeReadingsView: View {
         List {
             ForEach(readings) { reading in
                 ReadingRow(reading: reading)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            pendingDeletion = reading
+                            showDeleteConfirmation = true
+                        } label: {
+                            Label("Löschen", systemImage: "trash")
+                        }
+                    }
             }
+        }
+        .alert("Eintrag löschen?", isPresented: $showDeleteConfirmation) {
+            Button("Abbrechen", role: .cancel) {
+                pendingDeletion = nil
+            }
+            Button("Löschen", role: .destructive) {
+                if let toDelete = pendingDeletion {
+                    viewContext.delete(toDelete)
+                    try? viewContext.save()
+                    pendingDeletion = nil
+                }
+            }
+        } message: {
+            Text("Möchtest du diesen Zählerstand wirklich löschen?")
         }
         .navigationTitle(type.displayName)
     }
