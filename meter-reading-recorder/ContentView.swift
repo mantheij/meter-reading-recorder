@@ -6,6 +6,7 @@ import CoreData
 // MARK: - Content View
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var showCamera = false
     @State private var recognizedValue: String? = nil
@@ -18,6 +19,8 @@ struct ContentView: View {
     
     // Accent colors array for cycling
     private let accentColors: [Color] = [.meterAccent1, .meterAccent2, .meterAccent3, .meterAccent4]
+    // Dark mode accent colors for higher contrast
+    private let darkAccentColors: [Color] = [.darkMeterAccent1, .darkMeterAccent2, .darkMeterAccent3, .darkMeterAccent4]
     
     var body: some View {
         NavigationView {
@@ -26,12 +29,12 @@ struct ContentView: View {
                     ForEach(Array(MeterType.allCases.enumerated()), id: \.element) { index, type in
                         NavigationLink(destination: MeterTypeReadingsView(type: type)) {
                             Text(type.displayName)
-                                .foregroundColor(.black) // Basic text in black
+                                .foregroundColor(colorScheme == .dark ? .white : .black) // Adapt text color for dark mode
                                 .font(.headline) // Prominent headline font
                                 .padding(.vertical, 8)
                                 .padding(.leading, 12)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(accentColors[index % accentColors.count].opacity(0.15))
+                                .background((colorScheme == .dark ? darkAccentColors[index % darkAccentColors.count] : accentColors[index % accentColors.count]).opacity(colorScheme == .dark ? 0.35 : 0.15))
                                 .cornerRadius(8)
                         }
                         .listRowBackground(Color.clear) // Clear default listrow background to show custom bg
@@ -42,6 +45,7 @@ struct ContentView: View {
                     ToolbarItem(placement: .principal) {
                         Text("Zählerstände")
                             .font(.largeTitle).bold()
+                            .foregroundColor(colorScheme == .dark ? .white : .primary)
                             .offset(y: 24)
                     }
                 }
@@ -51,7 +55,7 @@ struct ContentView: View {
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.meterAccent3) // Use meterAccent3 as background for main button
+                        .background(colorScheme == .dark ? Color.darkMeterAccentPrimary : Color.meterAccent3) // Use dark mode color in dark mode
                         .foregroundColor(.white) // White text for contrast
                         .cornerRadius(10)
                 }
@@ -239,6 +243,7 @@ struct MeterTypeReadingsView: View {
     let type: MeterType
     
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.colorScheme) private var colorScheme
     @FetchRequest var readings: FetchedResults<MeterReading>
     
     init(type: MeterType) {
@@ -264,16 +269,18 @@ struct MeterTypeReadingsView: View {
 struct ReadingRow: View {
     let reading: MeterReading
     
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
                 Text(reading.value ?? "N/A")
                     .font(.headline)
-                    .foregroundColor(.black) // Basic value text in black
+                    .foregroundColor(colorScheme == .dark ? .white : .black) // Adapt text color for dark mode
                 
                 Text(reading.date ?? Date(), style: .date)
                     .font(.caption)
-                    .foregroundColor(Color.meterAccent1.opacity(0.7)) // Subtle accent color for date
+                    .foregroundColor((colorScheme == .dark ? Color.darkMeterAccentSecondary : Color.meterAccent1).opacity(0.7)) // Subtle accent color for date
             }
             Spacer()
             if let imageData = reading.imageData, let image = UIImage(data: imageData) {
@@ -342,5 +349,13 @@ extension Color {
     static let meterAccent2 = Color(red: 12/255, green: 119/255, blue: 121/255) // #0C7779
     static let meterAccent3 = Color(red: 36/255, green: 158/255, blue: 148/255) // #249E94
     static let meterAccent4 = Color(red: 59/255, green: 193/255, blue: 168/255) // #3BC1A8
+
+    // Dark mode accent palette (higher contrast against dark backgrounds)
+    static let darkMeterAccentPrimary = Color(red: 0/255, green: 180/255, blue: 190/255) // teal-cyan, bright for buttons
+    static let darkMeterAccentSecondary = Color(red: 140/255, green: 220/255, blue: 210/255) // softer accent for text/details
+    static let darkMeterAccent1 = Color(red: 20/255, green: 110/255, blue: 120/255)
+    static let darkMeterAccent2 = Color(red: 16/255, green: 140/255, blue: 150/255)
+    static let darkMeterAccent3 = Color(red: 0/255, green: 170/255, blue: 160/255)
+    static let darkMeterAccent4 = Color(red: 0/255, green: 200/255, blue: 180/255)
 }
 
