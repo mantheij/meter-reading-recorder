@@ -102,6 +102,16 @@ struct ContentView: View {
                     VStack(spacing: 16) {
                         Text("Erkannten Wert bearbeiten")
                             .font(.headline)
+                        
+                        if let image = capturedImage {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 200)
+                                .cornerRadius(8)
+                                .padding(.horizontal)
+                        }
+                        
                         TextField("Zählerstand", text: $editedValue)
                             .keyboardType(.decimalPad)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -130,7 +140,7 @@ struct ContentView: View {
                                 if !digitsOnly.isEmpty {
                                     recognizedValue = filtered
                                     showEditSheet = false
-                                    showSuccessAlert = true
+                                    showTypeSelector = true
                                 } else {
                                     // keep sheet open for correction
                                 }
@@ -248,6 +258,12 @@ struct MeterTypeReadingsView: View {
     
     @State private var showDeleteConfirmation: Bool = false
     @State private var pendingDeletion: MeterReading? = nil
+    @State private var showEditSheet: Bool = false
+    @State private var editingReading: MeterReading? = nil
+    @State private var editedValue: String = ""
+
+    @State private var showImageFullscreen: Bool = false
+    @State private var fullscreenImage: UIImage? = nil
     
     init(type: MeterType) {
         self.type = type
@@ -261,15 +277,24 @@ struct MeterTypeReadingsView: View {
     var body: some View {
         List {
             ForEach(readings) { reading in
-                ReadingRow(reading: reading)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            pendingDeletion = reading
-                            showDeleteConfirmation = true
-                        } label: {
-                            Label("Löschen", systemImage: "trash")
-                        }
+                ReadingRow(reading: reading, onImageTap: { img in
+                    fullscreenImage = img
+                    showImageFullscreen = true
+                })
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    editingReading = reading
+                    editedValue = reading.value ?? ""
+                    showEditSheet = true
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        pendingDeletion = reading
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Löschen", systemImage: "trash")
                     }
+                }
             }
         }
         .alert("Eintrag löschen?", isPresented: $showDeleteConfirmation) {
@@ -286,13 +311,91 @@ struct MeterTypeReadingsView: View {
         } message: {
             Text("Möchtest du diesen Zählerstand wirklich löschen?")
         }
+        .sheet(isPresented: $showEditSheet) {
+            NavigationView {
+                VStack(spacing: 16) {
+                    Text("Zählerstand bearbeiten")
+                        .font(.headline)
+                    
+                    if let data = editingReading?.imageData, let uiImg = UIImage(data: data) {
+                        Image(uiImage: uiImg)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 200)
+                            .cornerRadius(8)
+                            .padding(.horizontal)
+                    }
+                    
+                    TextField("Zählerstand", text: $editedValue)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                    Spacer()
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Abbrechen") {
+                            showEditSheet = false
+                            editingReading = nil
+                        }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Speichern") {
+                            // Normalize and validate input similar to capture edit flow
+                            var filtered = editedValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                            filtered = filtered.replacingOccurrences(of: ",", with: ".")
+                            filtered = filtered.components(separatedBy: CharacterSet(charactersIn: "0123456789.").inverted).joined()
+                            if let firstDot = filtered.firstIndex(of: ".") {
+                                let after = filtered[filtered.index(after: firstDot)...].replacingOccurrences(of: ".", with: "")
+                                filtered = String(filtered[..<filtered.index(after: firstDot)]) + after
+                            }
+                            let digitsOnly = filtered.replacingOccurrences(of: ".", with: "")
+                            if !digitsOnly.isEmpty, let editing = editingReading {
+                                editing.value = filtered
+                                try? viewContext.save()
+                                showEditSheet = false
+                                editingReading = nil
+                            } else {
+                                // keep sheet open for correction
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showImageFullscreen) {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                VStack {
+                    Spacer()
+                    if let img = fullscreenImage {
+                        Image(uiImage: img)
+                            .resizable()
+                            .scaledToFit()
+                            .padding()
+                    } else {
+                        // Placeholder if image is unexpectedly nil
+                        ProgressView()
+                            .tint(.white)
+                    }
+                    Spacer()
+                    Button(action: { showImageFullscreen = false }) {
+                        Label("Schließen", systemImage: "xmark.circle.fill")
+                            .font(.title2)
+                            .padding()
+                            .foregroundColor(.white)
+                    }
+                }
+            }
+        }
         .navigationTitle(type.displayName)
     }
 }
 
 // MARK: - Reading Row
 struct ReadingRow: View {
-    let reading: MeterReading
+    @ObservedObject var reading: MeterReading
+    var onImageTap: ((UIImage) -> Void)? = nil
     
     @Environment(\.colorScheme) private var colorScheme
     
@@ -314,6 +417,7 @@ struct ReadingRow: View {
                     .scaledToFill()
                     .frame(width: 60, height: 60)
                     .cornerRadius(8)
+                    .onTapGesture { onImageTap?(image) }
             }
         }
     }
