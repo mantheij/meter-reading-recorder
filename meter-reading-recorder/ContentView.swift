@@ -279,7 +279,9 @@ struct MeterTypeReadingsView: View {
             ForEach(readings) { reading in
                 ReadingRow(reading: reading, onImageTap: { img in
                     fullscreenImage = img
-                    showImageFullscreen = true
+                    DispatchQueue.main.async {
+                        showImageFullscreen = true
+                    }
                 })
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -323,6 +325,11 @@ struct MeterTypeReadingsView: View {
                             .scaledToFit()
                             .frame(maxHeight: 200)
                             .cornerRadius(8)
+                            .padding(.horizontal)
+                    } else {
+                        Text("Kein Bild vorhanden")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
                             .padding(.horizontal)
                     }
                     
@@ -374,9 +381,9 @@ struct MeterTypeReadingsView: View {
                             .scaledToFit()
                             .padding()
                     } else {
-                        // Placeholder if image is unexpectedly nil
-                        ProgressView()
-                            .tint(.white)
+                        Text("Kein Bild zum Anzeigen")
+                            .foregroundColor(.white)
+                            .padding()
                     }
                     Spacer()
                     Button(action: { showImageFullscreen = false }) {
