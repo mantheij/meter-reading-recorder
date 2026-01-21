@@ -16,6 +16,8 @@ struct ContentView: View {
     @State private var showErrorAlert = false
     @State private var showEditSheet = false
     @State private var editedValue: String = ""
+    @State private var showManualEntry: Bool = false
+    @State private var manualValue: String = ""
     
     // Accent colors array for cycling
     private let accentColors: [Color] = [.meterAccent1, .meterAccent2, .meterAccent3, .meterAccent4]
@@ -46,7 +48,14 @@ struct ContentView: View {
                         Text("Zählerstände")
                             .font(.largeTitle).bold()
                             .foregroundColor(colorScheme == .dark ? .white : .primary)
-                            .offset(y: 24)
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: {
+                            manualValue = ""
+                            showManualEntry = true
+                        }) {
+                            Image(systemName: "plus")
+                        }
                     }
                 }
                 
@@ -149,10 +158,50 @@ struct ContentView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showManualEntry) {
+                NavigationView {
+                    VStack(spacing: 16) {
+                        Text("Manuell eingeben")
+                            .font(.headline)
+
+                        TextField("Zählerstand", text: $manualValue)
+                            .keyboardType(.decimalPad)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.horizontal)
+                        Spacer()
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Abbrechen") {
+                                showManualEntry = false
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Weiter") {
+                                var filtered = manualValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                filtered = filtered.replacingOccurrences(of: ",", with: ".")
+                                filtered = filtered.components(separatedBy: CharacterSet(charactersIn: "0123456789.").inverted).joined()
+                                if let firstDot = filtered.firstIndex(of: ".") {
+                                    let after = filtered[filtered.index(after: firstDot)...].replacingOccurrences(of: ".", with: "")
+                                    filtered = String(filtered[..<filtered.index(after: firstDot)]) + after
+                                }
+                                let digitsOnly = filtered.replacingOccurrences(of: ".", with: "")
+                                if !digitsOnly.isEmpty {
+                                    recognizedValue = filtered
+                                    capturedImage = nil
+                                    showManualEntry = false
+                                    showTypeSelector = true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             .confirmationDialog("Zählertyp auswählen", isPresented: $showTypeSelector, titleVisibility: .visible) {
                 ForEach(MeterType.allCases, id: \.self) { type in
                     Button(type.displayName) {
-                        if let value = recognizedValue, let image = capturedImage {
+                        if let value = recognizedValue {
+                            let image = capturedImage ?? UIImage()
                             saveReading(value: value, type: type, image: image)
                         }
                         recognizedValue = nil
@@ -242,7 +291,11 @@ struct ContentView: View {
         newReading.value = value
         newReading.meterType = type.rawValue
         newReading.date = Date()
-        newReading.imageData = image.jpegData(compressionQuality: 0.7)
+        if let data = image.jpegData(compressionQuality: 0.7), data.count > 0 {
+            newReading.imageData = data
+        } else {
+            newReading.imageData = nil
+        }
         
         try? viewContext.save()
     }
@@ -261,9 +314,11 @@ struct MeterTypeReadingsView: View {
     @State private var showEditSheet: Bool = false
     @State private var editingReading: MeterReading? = nil
     @State private var editedValue: String = ""
+    @State private var editingImage: UIImage? = nil
 
     @State private var showImageFullscreen: Bool = false
     @State private var fullscreenImage: UIImage? = nil
+    @State private var fullscreenImageID: UUID = UUID()
     
     init(type: MeterType) {
         self.type = type
@@ -275,26 +330,36 @@ struct MeterTypeReadingsView: View {
     }
     
     var body: some View {
-        List {
-            ForEach(readings) { reading in
-                ReadingRow(reading: reading, onImageTap: { img in
-                    fullscreenImage = img
-                    DispatchQueue.main.async {
-                        showImageFullscreen = true
+        ZStack {
+            List {
+                ForEach(readings) { reading in
+                    ReadingRow(reading: reading, onImageTap: { img in
+                        fullscreenImage = img
+                        fullscreenImageID = UUID()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                            showImageFullscreen = true
+                        }
+                    })
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        editingReading = reading
+                        editedValue = reading.value ?? ""
+                        if let data = reading.imageData, let uiImg = UIImage(data: data) {
+                            editingImage = uiImg
+                        } else {
+                            editingImage = nil
+                        }
+                        DispatchQueue.main.async {
+                            showEditSheet = true
+                        }
                     }
-                })
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    editingReading = reading
-                    editedValue = reading.value ?? ""
-                    showEditSheet = true
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        pendingDeletion = reading
-                        showDeleteConfirmation = true
-                    } label: {
-                        Label("Löschen", systemImage: "trash")
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            pendingDeletion = reading
+                            showDeleteConfirmation = true
+                        } label: {
+                            Label("Löschen", systemImage: "trash")
+                        }
                     }
                 }
             }
@@ -319,7 +384,7 @@ struct MeterTypeReadingsView: View {
                     Text("Zählerstand bearbeiten")
                         .font(.headline)
                     
-                    if let data = editingReading?.imageData, let uiImg = UIImage(data: data) {
+                    if let uiImg = editingImage {
                         Image(uiImage: uiImg)
                             .resizable()
                             .scaledToFit()
@@ -348,7 +413,6 @@ struct MeterTypeReadingsView: View {
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Speichern") {
-                            // Normalize and validate input similar to capture edit flow
                             var filtered = editedValue.trimmingCharacters(in: .whitespacesAndNewlines)
                             filtered = filtered.replacingOccurrences(of: ",", with: ".")
                             filtered = filtered.components(separatedBy: CharacterSet(charactersIn: "0123456789.").inverted).joined()
@@ -380,6 +444,7 @@ struct MeterTypeReadingsView: View {
                             .resizable()
                             .scaledToFit()
                             .padding()
+                            .id(fullscreenImageID)
                     } else {
                         Text("Kein Bild zum Anzeigen")
                             .foregroundColor(.white)
@@ -393,6 +458,13 @@ struct MeterTypeReadingsView: View {
                             .foregroundColor(.white)
                     }
                 }
+            }
+        }
+        .onChange(of: editingReading) { _, newValue in
+            if let data = newValue?.imageData, let uiImg = UIImage(data: data) {
+                editingImage = uiImg
+            } else {
+                editingImage = nil
             }
         }
         .navigationTitle(type.displayName)
