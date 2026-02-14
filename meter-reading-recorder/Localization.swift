@@ -1,5 +1,18 @@
 import SwiftUI
 
+// MARK: - Language Environment Key
+
+private struct AppLanguageKey: EnvironmentKey {
+    static let defaultValue: String = AppLanguage.de.rawValue
+}
+
+extension EnvironmentValues {
+    var appLanguage: String {
+        get { self[AppLanguageKey.self] }
+        set { self[AppLanguageKey.self] = newValue }
+    }
+}
+
 // MARK: - App Language
 
 enum AppLanguage: String, CaseIterable {

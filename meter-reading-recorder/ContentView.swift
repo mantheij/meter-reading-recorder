@@ -4,6 +4,7 @@ import CoreData
 // MARK: - Content View
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.appLanguage) private var appLanguage
 
     @State private var showCamera = false
     @State private var recognizedValue: String? = nil

@@ -3,6 +3,7 @@ import CoreData
 
 struct MeterTypeListView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.appLanguage) private var appLanguage
 
     var body: some View {
         ScrollView {

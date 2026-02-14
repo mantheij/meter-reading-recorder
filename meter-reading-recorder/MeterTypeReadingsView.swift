@@ -4,6 +4,7 @@ import CoreData
 struct MeterTypeReadingsView: View {
     let type: MeterType
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.appLanguage) private var appLanguage
     @FetchRequest var readings: FetchedResults<MeterReading>
     @State private var showDeleteConfirmation: Bool = false
     @State private var pendingDeletion: MeterReading? = nil

@@ -7,6 +7,7 @@ enum SidebarDestination: Hashable {
 
 struct SidebarView: View {
     @Binding var showSidebar: Bool
+    @Environment(\.appLanguage) private var appLanguage
     var onNavigate: (SidebarDestination) -> Void
 
     private let animationDuration: Double = 0.3
