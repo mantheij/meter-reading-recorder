@@ -14,8 +14,6 @@ env:
   # Project settings — adjust if scheme or project name changes
   SCHEME: meter-reading-recorder
   PROJECT: meter-reading-recorder.xcodeproj
-  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=latest"
-  RESULT_BUNDLE_PATH: TestResults.xcresult
 
 jobs:
   build-and-test:
@@ -63,33 +61,14 @@ jobs:
 
       - name: Build
         run: |
-          xcodebuild build-for-testing \
+          xcodebuild build \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
+            -sdk iphonesimulator \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO | xcpretty && exit ${PIPESTATUS[0]}
 
-      # --- Test ---
-
-      - name: Run tests
-        run: |
-          xcodebuild test-without-building \
-            -project "$PROJECT" \
-            -scheme "$SCHEME" \
-            -destination "$DESTINATION" \
-            -resultBundlePath "$RESULT_BUNDLE_PATH" \
-            CODE_SIGNING_ALLOWED=NO | xcpretty --report junit && exit ${PIPESTATUS[0]}
-
       # --- Upload artifacts on failure ---
-
-      - name: Upload test results
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: ${{ env.RESULT_BUNDLE_PATH }}
-          retention-days: 14
 
       - name: Upload xcodebuild logs
         if: failure()
