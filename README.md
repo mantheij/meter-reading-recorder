@@ -1,5 +1,5 @@
 # Meter Reading Recorder App for iOS
-[![iOS Build & Test](https://github.com/mantheij/meter-reading-recorder/actions/workflows/swift.yml/badge.svg)](https://github.com/mantheij/meter-reading-recorder/actions/workflows/swift.yml)
+[![iOS CI](https://github.com/mantheij/meter-reading-recorder/actions/workflows/ci.yml/badge.svg)](https://github.com/mantheij/meter-reading-recorder/actions/workflows/ci.yml)
 
 (WIP) App for recording meter readings for energy, water and gas consumption in a household.
 
