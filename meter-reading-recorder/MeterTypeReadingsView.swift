@@ -4,7 +4,6 @@ import CoreData
 struct MeterTypeReadingsView: View {
     let type: MeterType
     @Environment(\.managedObjectContext) private var viewContext
-    @Environment(\.colorScheme) private var colorScheme
     @FetchRequest var readings: FetchedResults<MeterReading>
     @State private var showDeleteConfirmation: Bool = false
     @State private var pendingDeletion: MeterReading? = nil
@@ -15,6 +14,7 @@ struct MeterTypeReadingsView: View {
     @State private var showImageFullscreen: Bool = false
     @State private var fullscreenImage: UIImage? = nil
     @State private var fullscreenImageID: UUID = UUID()
+
     init(type: MeterType) {
         self.type = type
         _readings = FetchRequest<MeterReading>(
@@ -23,36 +23,45 @@ struct MeterTypeReadingsView: View {
             animation: .default
         )
     }
+
     var body: some View {
         ZStack {
-            List {
-                ForEach(readings) { reading in
-                    ReadingRow(reading: reading, onImageTap: { img in
-                        fullscreenImage = img
-                        fullscreenImageID = UUID()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                            showImageFullscreen = true
+            if readings.isEmpty {
+                EmptyStateView(
+                    icon: type.iconName,
+                    title: "Keine Zählerstände",
+                    subtitle: "Erfasse deinen ersten \(type.displayName)-Zählerstand über die Kamera oder manuelle Eingabe."
+                )
+            } else {
+                List {
+                    ForEach(readings) { reading in
+                        ReadingRow(reading: reading, onImageTap: { img in
+                            fullscreenImage = img
+                            fullscreenImageID = UUID()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                showImageFullscreen = true
+                            }
+                        })
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            editingReading = reading
+                            editedValue = reading.value ?? ""
+                            if let data = reading.imageData, let uiImg = UIImage(data: data) {
+                                editingImage = uiImg
+                            } else {
+                                editingImage = nil
+                            }
+                            DispatchQueue.main.async {
+                                showEditSheet = true
+                            }
                         }
-                    })
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        editingReading = reading
-                        editedValue = reading.value ?? ""
-                        if let data = reading.imageData, let uiImg = UIImage(data: data) {
-                            editingImage = uiImg
-                        } else {
-                            editingImage = nil
-                        }
-                        DispatchQueue.main.async {
-                            showEditSheet = true
-                        }
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            pendingDeletion = reading
-                            showDeleteConfirmation = true
-                        } label: {
-                            Label("Löschen", systemImage: "trash")
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                pendingDeletion = reading
+                                showDeleteConfirmation = true
+                            } label: {
+                                Label("Löschen", systemImage: "trash")
+                            }
                         }
                     }
                 }
@@ -73,48 +82,24 @@ struct MeterTypeReadingsView: View {
             Text("Möchtest du diesen Zählerstand wirklich löschen?")
         }
         .sheet(isPresented: $showEditSheet) {
-            NavigationView {
-                VStack(spacing: 16) {
-                    Text("Zählerstand bearbeiten")
-                        .font(.headline)
-                    if let uiImg = editingImage {
-                        Image(uiImage: uiImg)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 200)
-                            .cornerRadius(8)
-                            .padding(.horizontal)
-                    } else {
-                        Text("Kein Bild vorhanden")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal)
-                    }
-                    TextField("Zählerstand", text: $editedValue)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-                    Spacer()
-                }
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Abbrechen") {
-                            showEditSheet = false
-                            editingReading = nil
-                        }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Speichern") {
-                            if let sanitized = ValueFormatter.sanitizeMeterValue(editedValue), let editing = editingReading {
-                                editing.value = sanitized
-                                try? viewContext.save()
-                                showEditSheet = false
-                                editingReading = nil
-                            }
-                        }
+            MeterReadingFormSheet(
+                title: "Zählerstand bearbeiten",
+                image: editingImage,
+                value: $editedValue,
+                confirmTitle: "Speichern",
+                onCancel: {
+                    showEditSheet = false
+                    editingReading = nil
+                },
+                onConfirm: {
+                    if let sanitized = ValueFormatter.sanitizeMeterValue(editedValue), let editing = editingReading {
+                        editing.value = sanitized
+                        try? viewContext.save()
+                        showEditSheet = false
+                        editingReading = nil
                     }
                 }
-            }
+            )
         }
         .fullScreenCover(isPresented: $showImageFullscreen) {
             ZStack {

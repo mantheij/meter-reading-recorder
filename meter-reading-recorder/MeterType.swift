@@ -14,6 +14,14 @@ enum MeterType: String, CaseIterable {
         }
     }
 
+    var iconName: String {
+        switch self {
+        case .water: return "drop.fill"
+        case .electricity: return "bolt.fill"
+        case .gas: return "flame.fill"
+        }
+    }
+
     static let accentColors: [Color] = [.meterAccent1, .meterAccent2, .meterAccent3, .meterAccent4]
     static let darkAccentColors: [Color] = [.darkMeterAccent1, .darkMeterAccent2, .darkMeterAccent3, .darkMeterAccent4]
 }

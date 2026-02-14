@@ -4,7 +4,6 @@ import CoreData
 // MARK: - Content View
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @Environment(\.colorScheme) private var colorScheme
 
     @State private var showCamera = false
     @State private var recognizedValue: String? = nil
@@ -23,7 +22,7 @@ struct ContentView: View {
         ZStack(alignment: .leading) {
             NavigationStack(path: $navigationPath) {
                 VStack {
-                    MeterTypeListView(colorScheme: colorScheme)
+                    MeterTypeListView()
                         .toolbar {
                             ToolbarItem(placement: .topBarLeading) {
                                 Button(action: {
@@ -37,7 +36,7 @@ struct ContentView: View {
                             ToolbarItem(placement: .principal) {
                                 Text("Zählerstände")
                                     .font(.largeTitle).bold()
-                                    .foregroundColor(colorScheme == .dark ? .white : .primary)
+                                    .foregroundColor(AppTheme.textPrimary)
                             }
                             ToolbarItem(placement: .topBarTrailing) {
                                 Button(action: {
@@ -49,16 +48,10 @@ struct ContentView: View {
                             }
                         }
 
-                    Button(action: { showCamera = true }) {
-                        Label("Zählerstand erfassen", systemImage: "camera.fill")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(colorScheme == .dark ? Color.darkMeterAccentPrimary : Color.meterAccent3)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
+                    PrimaryButton(title: "Zählerstand erfassen", icon: "camera.fill") {
+                        showCamera = true
                     }
-                    .padding()
+                    .padding(AppTheme.Spacing.md)
                 }
                 .navigationDestination(for: SidebarDestination.self) { destination in
                     switch destination {
@@ -114,74 +107,36 @@ struct ContentView: View {
             Text("Die Zahl konnte nicht erkannt werden. Bitte erneut fotografieren.")
         })
         .sheet(isPresented: $showEditSheet) {
-            NavigationView {
-                VStack(spacing: 16) {
-                    Text("Erkannten Wert bearbeiten")
-                        .font(.headline)
-
-                    if let image = capturedImage {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 200)
-                            .cornerRadius(8)
-                            .padding(.horizontal)
-                    }
-
-                    TextField("Zählerstand", text: $editedValue)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-                    Spacer()
-                }
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Abbrechen") {
-                            showEditSheet = false
-                        }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Übernehmen") {
-                            if let sanitized = ValueFormatter.sanitizeMeterValue(editedValue) {
-                                recognizedValue = sanitized
-                                showEditSheet = false
-                                showTypeSelector = true
-                            }
-                        }
+            MeterReadingFormSheet(
+                title: "Erkannten Wert bearbeiten",
+                image: capturedImage,
+                value: $editedValue,
+                confirmTitle: "Übernehmen",
+                onCancel: { showEditSheet = false },
+                onConfirm: {
+                    if let sanitized = ValueFormatter.sanitizeMeterValue(editedValue) {
+                        recognizedValue = sanitized
+                        showEditSheet = false
+                        showTypeSelector = true
                     }
                 }
-            }
+            )
         }
         .sheet(isPresented: $showManualEntry) {
-            NavigationView {
-                VStack(spacing: 16) {
-                    Text("Manuell eingeben")
-                        .font(.headline)
-
-                    TextField("Zählerstand", text: $manualValue)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-                    Spacer()
-                }
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Abbrechen") {
-                            showManualEntry = false
-                        }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Weiter") {
-                            if let sanitized = ValueFormatter.sanitizeMeterValue(manualValue) {
-                                recognizedValue = sanitized
-                                capturedImage = nil
-                                showManualEntry = false
-                                showTypeSelector = true
-                            }
-                        }
+            MeterReadingFormSheet(
+                title: "Manuell eingeben",
+                value: $manualValue,
+                confirmTitle: "Weiter",
+                onCancel: { showManualEntry = false },
+                onConfirm: {
+                    if let sanitized = ValueFormatter.sanitizeMeterValue(manualValue) {
+                        recognizedValue = sanitized
+                        capturedImage = nil
+                        showManualEntry = false
+                        showTypeSelector = true
                     }
                 }
-            }
+            )
         }
         .confirmationDialog("Zählertyp auswählen", isPresented: $showTypeSelector, titleVisibility: .visible) {
             ForEach(MeterType.allCases, id: \.self) { type in
