@@ -66,7 +66,7 @@ jobs:
             -scheme "$SCHEME" \
             -sdk iphonesimulator \
             -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO | xcpretty && exit ${PIPESTATUS[0]}
+            CODE_SIGNING_ALLOWED=NO
 
       # --- Upload artifacts on failure ---
 
