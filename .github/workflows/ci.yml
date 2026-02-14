@@ -14,7 +14,7 @@ env:
   # Project settings — adjust if scheme or project name changes
   SCHEME: meter-reading-recorder
   PROJECT: meter-reading-recorder.xcodeproj
-  DESTINATION: "platform=iOS Simulator,name=iPhone 15,OS=latest"
+  DESTINATION: "platform=iOS Simulator,name=iPhone 16,OS=latest"
   RESULT_BUNDLE_PATH: TestResults.xcresult
 
 jobs:
