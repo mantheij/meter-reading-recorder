@@ -135,5 +135,13 @@ struct MeterTypeReadingsView: View {
             }
         }
         .navigationTitle(type.displayName)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(type.displayName)
+                    .font(.title2)
+                    .bold()
+            }
+        }
     }
 }
