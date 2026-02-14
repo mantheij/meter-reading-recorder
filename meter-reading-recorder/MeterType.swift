@@ -22,6 +22,14 @@ enum MeterType: String, CaseIterable {
         }
     }
 
+    var unit: String {
+        switch self {
+        case .water: return "m³"
+        case .electricity: return "kWh"
+        case .gas: return "m³"
+        }
+    }
+
     static let accentColors: [Color] = [.meterAccent1, .meterAccent2, .meterAccent3, .meterAccent4]
     static let darkAccentColors: [Color] = [.darkMeterAccent1, .darkMeterAccent2, .darkMeterAccent3, .darkMeterAccent4]
 }

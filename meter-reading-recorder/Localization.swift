@@ -104,4 +104,23 @@ struct L10n {
     static var appearanceSystem: String { s("System", "System") }
     static var appearanceLight: String { s("Hell", "Light") }
     static var appearanceDark: String { s("Dunkel", "Dark") }
+
+    // MARK: Visualization
+    static var consumption: String { s("Verbrauch", "Consumption") }
+    static var week: String { s("Woche", "Week") }
+    static var month: String { s("Monat", "Month") }
+    static var threeMonths: String { s("3M", "3M") }
+    static var sixMonths: String { s("6M", "6M") }
+    static var twelveMonths: String { s("12M", "12M") }
+    static var allTime: String { s("Gesamt", "All") }
+    static var total: String { s("Gesamt", "Total") }
+    static var averagePer: String { s("Ø pro", "Avg per") }
+    static var trend: String { s("Trend", "Trend") }
+    static var noDataForVisualization: String { s("Nicht genug Daten", "Not enough data") }
+    static var noDataForVisualizationSubtitle: String {
+        s("Erfasse mindestens zwei Zählerstände eines Typs, um den Verbrauch zu berechnen.",
+          "Record at least two meter readings of one type to calculate consumption.")
+    }
+    static var period: String { s("Zeitraum", "Period") }
+    static var vsLastPeriod: String { s("ggü. Vorperiode", "vs last period") }
 }
