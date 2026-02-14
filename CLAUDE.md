@@ -40,4 +40,4 @@ Tests exist in `meter-reading-recorderTests/` (Swift Testing) and `meter-reading
 
 ### Xcode Project
 - Uses `PBXFileSystemSynchronizedRootGroup` — new Swift files in `meter-reading-recorder/` are automatically included in the build without editing `project.pbxproj`
-- Swift 5.0, iOS deployment target 26.2
+- Swift 5.0, iOS deployment target 18.0
