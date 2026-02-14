@@ -30,6 +30,9 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Install iOS Simulator runtime
+        run: xcodebuild -downloadPlatform iOS
+
       # --- Caching ---
 
       - name: Cache SwiftPM packages
