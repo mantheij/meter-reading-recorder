@@ -11,9 +11,7 @@ struct MeterTypeReadingsView: View {
     @State private var editingReading: MeterReading? = nil
     @State private var editedValue: String = ""
     @State private var editingImage: UIImage? = nil
-    @State private var showImageFullscreen: Bool = false
-    @State private var fullscreenImage: UIImage? = nil
-    @State private var fullscreenImageID: UUID = UUID()
+    @State private var fullscreenReading: MeterReading? = nil
 
     init(type: MeterType) {
         self.type = type
@@ -35,12 +33,8 @@ struct MeterTypeReadingsView: View {
             } else {
                 List {
                     ForEach(readings) { reading in
-                        ReadingRow(reading: reading, onImageTap: { img in
-                            fullscreenImage = img
-                            fullscreenImageID = UUID()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                                showImageFullscreen = true
-                            }
+                        ReadingRow(reading: reading, onImageTap: {
+                            fullscreenReading = reading
                         })
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -101,24 +95,23 @@ struct MeterTypeReadingsView: View {
                 }
             )
         }
-        .fullScreenCover(isPresented: $showImageFullscreen) {
+        .fullScreenCover(item: $fullscreenReading) { reading in
             ZStack {
                 Color.black.ignoresSafeArea()
                 VStack {
                     Spacer()
-                    if let img = fullscreenImage {
+                    if let data = reading.imageData, let img = UIImage(data: data) {
                         Image(uiImage: img)
                             .resizable()
                             .scaledToFit()
                             .padding()
-                            .id(fullscreenImageID)
                     } else {
                         Text(L10n.noImageToShow)
                             .foregroundColor(.white)
                             .padding()
                     }
                     Spacer()
-                    Button(action: { showImageFullscreen = false }) {
+                    Button(action: { fullscreenReading = nil }) {
                         Label(L10n.close, systemImage: "xmark.circle.fill")
                             .font(.title2)
                             .padding()

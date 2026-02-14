@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ReadingRow: View {
     @ObservedObject var reading: MeterReading
-    var onImageTap: ((UIImage) -> Void)? = nil
+    var onImageTap: (() -> Void)? = nil
 
     var body: some View {
         HStack {
@@ -16,12 +16,16 @@ struct ReadingRow: View {
             }
             Spacer()
             if let imageData = reading.imageData, let image = UIImage(data: imageData) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 60, height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
-                    .onTapGesture { onImageTap?(image) }
+                Button {
+                    onImageTap?()
+                } label: {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 60, height: 60)
+                        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+                }
+                .buttonStyle(.plain)
             }
         }
     }
