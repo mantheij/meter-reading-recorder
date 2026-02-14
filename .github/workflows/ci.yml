@@ -64,9 +64,10 @@ jobs:
           xcodebuild build \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
-            -destination 'generic/platform=iOS' \
+            -sdk iphoneos \
             -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            ENABLE_PREVIEWS=NO
 
       # --- Upload artifacts on failure ---
 
