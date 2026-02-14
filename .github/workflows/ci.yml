@@ -30,9 +30,6 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Install iOS Simulator runtime
-        run: xcodebuild -downloadPlatform iOS
-
       # --- Caching ---
 
       - name: Cache SwiftPM packages
@@ -67,7 +64,7 @@ jobs:
           xcodebuild build \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
-            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO
 
