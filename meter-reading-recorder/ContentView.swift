@@ -17,15 +17,20 @@ struct ContentView: View {
     @State private var showManualEntry: Bool = false
     @State private var manualValue: String = ""
     @State private var showSidebar: Bool = false
+    @State private var navigationPath = NavigationPath()
 
     var body: some View {
         ZStack(alignment: .leading) {
-            NavigationView {
+            NavigationStack(path: $navigationPath) {
                 VStack {
                     MeterTypeListView(colorScheme: colorScheme)
                         .toolbar {
                             ToolbarItem(placement: .topBarLeading) {
-                                Button(action: { showSidebar = true }) {
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        showSidebar = true
+                                    }
+                                }) {
                                     Image(systemName: "line.3.horizontal")
                                 }
                             }
@@ -55,41 +60,22 @@ struct ContentView: View {
                     }
                     .padding()
                 }
-            }
-            if showSidebar {
-                Color.black.opacity(0.35)
-                    .ignoresSafeArea()
-                    .onTapGesture { showSidebar = false }
-                    .zIndex(999)
-
-                Rectangle()
-                    .foregroundColor(.white)
-                    .frame(width: UIScreen.main.bounds.width * 0.5)
-                    .ignoresSafeArea()
-                    .zIndex(1000)
-
-                VStack(spacing: 0) {
-                    Button(action: { showSidebar = false }) {
-                        Label("Einstellungen", systemImage: "gear")
-                            .font(.title3)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(.black)
-                    }
-                    Divider()
-                    Button(action: { showSidebar = false }) {
-                        Label("Visualization", systemImage: "chart.bar.xaxis")
-                            .font(.title3)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .foregroundColor(.black)
+                .navigationDestination(for: SidebarDestination.self) { destination in
+                    switch destination {
+                    case .settings:
+                        SettingsView()
+                    case .visualization:
+                        VisualizationView()
                     }
                 }
-                .frame(maxHeight: .infinity)
-                .ignoresSafeArea(edges: .vertical)
-                .transition(.move(edge: .leading))
-                .zIndex(1001)
             }
+            SidebarView(showSidebar: $showSidebar) { destination in
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showSidebar = false
+                }
+                navigationPath.append(destination)
+            }
+            .allowsHitTesting(showSidebar)
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraView { image in

@@ -22,6 +22,7 @@ struct MeterTypeListView: View {
                 .listRowBackground(Color.clear)
             }
         }
-        .navigationBarTitleDisplayMode(.large)
+        .listStyle(.plain)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
