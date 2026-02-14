@@ -135,16 +135,16 @@ struct MeterReadingFormSheet: View {
         title: String,
         image: UIImage? = nil,
         value: Binding<String>,
-        cancelTitle: String = "Abbrechen",
-        confirmTitle: String = "Übernehmen",
+        cancelTitle: String? = nil,
+        confirmTitle: String? = nil,
         onCancel: @escaping () -> Void,
         onConfirm: @escaping () -> Void
     ) {
         self.title = title
         self.image = image
         self._value = value
-        self.cancelTitle = cancelTitle
-        self.confirmTitle = confirmTitle
+        self.cancelTitle = cancelTitle ?? L10n.cancel
+        self.confirmTitle = confirmTitle ?? L10n.apply
         self.onCancel = onCancel
         self.onConfirm = onConfirm
     }
@@ -162,14 +162,14 @@ struct MeterReadingFormSheet: View {
                         .frame(maxHeight: 200)
                         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
                         .padding(.horizontal)
-                } else if title == "Zählerstand bearbeiten" {
-                    Text("Kein Bild vorhanden")
+                } else if title == L10n.editMeterReading {
+                    Text(L10n.noImageAvailable)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
                 }
 
-                TextField("Zählerstand", text: $value)
+                TextField(L10n.meterReadingPlaceholder, text: $value)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)

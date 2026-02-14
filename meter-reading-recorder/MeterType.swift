@@ -8,9 +8,9 @@ enum MeterType: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .water: return "Wasser"
-        case .electricity: return "Strom"
-        case .gas: return "Gas"
+        case .water: return L10n.water
+        case .electricity: return L10n.electricity
+        case .gas: return L10n.gas
         }
     }
 

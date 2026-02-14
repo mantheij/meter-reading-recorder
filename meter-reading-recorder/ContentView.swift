@@ -34,7 +34,7 @@ struct ContentView: View {
                                 }
                             }
                             ToolbarItem(placement: .principal) {
-                                Text("Zählerstände")
+                                Text(L10n.meterReadings)
                                     .font(.largeTitle).bold()
                                     .foregroundColor(AppTheme.textPrimary)
                             }
@@ -48,7 +48,7 @@ struct ContentView: View {
                             }
                         }
 
-                    PrimaryButton(title: "Zählerstand erfassen", icon: "camera.fill") {
+                    PrimaryButton(title: L10n.captureMeterReading, icon: "camera.fill") {
                         showCamera = true
                     }
                     .padding(AppTheme.Spacing.md)
@@ -76,42 +76,42 @@ struct ContentView: View {
             }
             .ignoresSafeArea()
         }
-        .alert("Erkennung erfolgreich", isPresented: $showSuccessAlert, actions: {
-            Button("Bestätigen") {
+        .alert(L10n.recognitionSuccessful, isPresented: $showSuccessAlert, actions: {
+            Button(L10n.confirm) {
                 showTypeSelector = true
             }
-            Button("Bearbeiten") {
+            Button(L10n.edit) {
                 editedValue = recognizedValue ?? ""
                 showEditSheet = true
             }
-            Button("Erneut fotografieren", role: .cancel) {
+            Button(L10n.retakePhoto, role: .cancel) {
                 recognizedValue = nil
                 capturedImage = nil
                 showCamera = true
             }
         }, message: {
             if let value = recognizedValue {
-                Text("Erkannte Zahl: \(value)\nBitte bestätigen.")
+                Text(L10n.recognizedNumber(value))
             } else {
-                Text("Erkannte Zahl ist nicht verfügbar.")
+                Text(L10n.recognizedNumberUnavailable)
             }
         })
-        .alert("Erkennung fehlgeschlagen", isPresented: $showErrorAlert, actions: {
-            Button("Erneut fotografieren") {
+        .alert(L10n.recognitionFailed, isPresented: $showErrorAlert, actions: {
+            Button(L10n.retakePhoto) {
                 recognizedValue = nil
                 capturedImage = nil
                 showCamera = true
             }
-            Button("Abbrechen", role: .cancel) {}
+            Button(L10n.cancel, role: .cancel) {}
         }, message: {
-            Text("Die Zahl konnte nicht erkannt werden. Bitte erneut fotografieren.")
+            Text(L10n.recognitionFailedMessage)
         })
         .sheet(isPresented: $showEditSheet) {
             MeterReadingFormSheet(
-                title: "Erkannten Wert bearbeiten",
+                title: L10n.editRecognizedValue,
                 image: capturedImage,
                 value: $editedValue,
-                confirmTitle: "Übernehmen",
+                confirmTitle: L10n.apply,
                 onCancel: { showEditSheet = false },
                 onConfirm: {
                     if let sanitized = ValueFormatter.sanitizeMeterValue(editedValue) {
@@ -124,9 +124,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showManualEntry) {
             MeterReadingFormSheet(
-                title: "Manuell eingeben",
+                title: L10n.manualEntry,
                 value: $manualValue,
-                confirmTitle: "Weiter",
+                confirmTitle: L10n.next,
                 onCancel: { showManualEntry = false },
                 onConfirm: {
                     if let sanitized = ValueFormatter.sanitizeMeterValue(manualValue) {
@@ -138,7 +138,7 @@ struct ContentView: View {
                 }
             )
         }
-        .confirmationDialog("Zählertyp auswählen", isPresented: $showTypeSelector, titleVisibility: .visible) {
+        .confirmationDialog(L10n.selectMeterType, isPresented: $showTypeSelector, titleVisibility: .visible) {
             ForEach(MeterType.allCases, id: \.self) { type in
                 Button(type.displayName) {
                     if let value = recognizedValue {
@@ -150,7 +150,7 @@ struct ContentView: View {
                     showTypeSelector = false
                 }
             }
-            Button("Abbrechen", role: .cancel) {
+            Button(L10n.cancel, role: .cancel) {
                 recognizedValue = nil
                 capturedImage = nil
                 showTypeSelector = false

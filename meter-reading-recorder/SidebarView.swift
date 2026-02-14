@@ -27,7 +27,7 @@ struct SidebarView: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     SidebarMenuItem(
-                        title: "Einstellungen",
+                        title: L10n.settings,
                         icon: "gear",
                         accentColor: AppTheme.accentPrimary
                     ) { onNavigate(.settings) }
@@ -36,7 +36,7 @@ struct SidebarView: View {
                         .padding(.horizontal, AppTheme.Spacing.lg)
 
                     SidebarMenuItem(
-                        title: "Visualisierung",
+                        title: L10n.visualization,
                         icon: "chart.bar.xaxis",
                         accentColor: AppTheme.accentPrimary
                     ) { onNavigate(.visualization) }

@@ -29,8 +29,8 @@ struct MeterTypeReadingsView: View {
             if readings.isEmpty {
                 EmptyStateView(
                     icon: type.iconName,
-                    title: "Keine Zählerstände",
-                    subtitle: "Erfasse deinen ersten \(type.displayName)-Zählerstand über die Kamera oder manuelle Eingabe."
+                    title: L10n.noReadings,
+                    subtitle: L10n.emptyStateSubtitle(type.displayName)
                 )
             } else {
                 List {
@@ -60,18 +60,18 @@ struct MeterTypeReadingsView: View {
                                 pendingDeletion = reading
                                 showDeleteConfirmation = true
                             } label: {
-                                Label("Löschen", systemImage: "trash")
+                                Label(L10n.delete, systemImage: "trash")
                             }
                         }
                     }
                 }
             }
         }
-        .alert("Eintrag löschen?", isPresented: $showDeleteConfirmation) {
-            Button("Abbrechen", role: .cancel) {
+        .alert(L10n.deleteEntry, isPresented: $showDeleteConfirmation) {
+            Button(L10n.cancel, role: .cancel) {
                 pendingDeletion = nil
             }
-            Button("Löschen", role: .destructive) {
+            Button(L10n.delete, role: .destructive) {
                 if let toDelete = pendingDeletion {
                     viewContext.delete(toDelete)
                     try? viewContext.save()
@@ -79,14 +79,14 @@ struct MeterTypeReadingsView: View {
                 }
             }
         } message: {
-            Text("Möchtest du diesen Zählerstand wirklich löschen?")
+            Text(L10n.deleteEntryMessage)
         }
         .sheet(isPresented: $showEditSheet) {
             MeterReadingFormSheet(
-                title: "Zählerstand bearbeiten",
+                title: L10n.editMeterReading,
                 image: editingImage,
                 value: $editedValue,
-                confirmTitle: "Speichern",
+                confirmTitle: L10n.save,
                 onCancel: {
                     showEditSheet = false
                     editingReading = nil
@@ -113,13 +113,13 @@ struct MeterTypeReadingsView: View {
                             .padding()
                             .id(fullscreenImageID)
                     } else {
-                        Text("Kein Bild zum Anzeigen")
+                        Text(L10n.noImageToShow)
                             .foregroundColor(.white)
                             .padding()
                     }
                     Spacer()
                     Button(action: { showImageFullscreen = false }) {
-                        Label("Schließen", systemImage: "xmark.circle.fill")
+                        Label(L10n.close, systemImage: "xmark.circle.fill")
                             .font(.title2)
                             .padding()
                             .foregroundColor(.white)
