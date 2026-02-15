@@ -71,6 +71,7 @@ struct L10n {
     static var manualEntry: String { s("Manuell eingeben", "Manual Entry") }
     static var editMeterReading: String { s("Zählerstand bearbeiten", "Edit Meter Reading") }
     static var meterReadingPlaceholder: String { s("Zählerstand", "Meter Reading") }
+    static var date: String { s("Datum", "Date") }
     static var noImageAvailable: String { s("Kein Bild vorhanden", "No image available") }
     static var noImageToShow: String { s("Kein Bild zum Anzeigen", "No image to display") }
 

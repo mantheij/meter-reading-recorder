@@ -11,6 +11,7 @@ struct MeterTypeReadingsView: View {
     @State private var showEditSheet: Bool = false
     @State private var editingReading: MeterReading? = nil
     @State private var editedValue: String = ""
+    @State private var editedDate = Date()
     @State private var editingImage: UIImage? = nil
     @State private var fullscreenReading: MeterReading? = nil
 
@@ -41,6 +42,7 @@ struct MeterTypeReadingsView: View {
                         .onTapGesture {
                             editingReading = reading
                             editedValue = reading.value ?? ""
+                            editedDate = reading.date ?? Date()
                             if let data = reading.imageData, let uiImg = UIImage(data: data) {
                                 editingImage = uiImg
                             } else {
@@ -81,6 +83,7 @@ struct MeterTypeReadingsView: View {
                 title: L10n.editMeterReading,
                 image: editingImage,
                 value: $editedValue,
+                date: $editedDate,
                 confirmTitle: L10n.save,
                 onCancel: {
                     showEditSheet = false
@@ -89,6 +92,7 @@ struct MeterTypeReadingsView: View {
                 onConfirm: {
                     if let sanitized = ValueFormatter.sanitizeMeterValue(editedValue), let editing = editingReading {
                         editing.value = sanitized
+                        editing.date = editedDate
                         try? viewContext.save()
                         showEditSheet = false
                         editingReading = nil

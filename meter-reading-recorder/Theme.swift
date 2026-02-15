@@ -126,6 +126,7 @@ struct MeterReadingFormSheet: View {
     let title: String
     let image: UIImage?
     @Binding var value: String
+    private var dateBinding: Binding<Date>?
     let cancelTitle: String
     let confirmTitle: String
     let onCancel: () -> Void
@@ -135,6 +136,7 @@ struct MeterReadingFormSheet: View {
         title: String,
         image: UIImage? = nil,
         value: Binding<String>,
+        date: Binding<Date>? = nil,
         cancelTitle: String? = nil,
         confirmTitle: String? = nil,
         onCancel: @escaping () -> Void,
@@ -143,6 +145,7 @@ struct MeterReadingFormSheet: View {
         self.title = title
         self.image = image
         self._value = value
+        self.dateBinding = date
         self.cancelTitle = cancelTitle ?? L10n.cancel
         self.confirmTitle = confirmTitle ?? L10n.apply
         self.onCancel = onCancel
@@ -173,6 +176,12 @@ struct MeterReadingFormSheet: View {
                     .keyboardType(.decimalPad)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
+
+                if let dateBinding = dateBinding {
+                    DatePicker(L10n.date, selection: dateBinding, displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .padding(.horizontal)
+                }
 
                 Spacer()
             }

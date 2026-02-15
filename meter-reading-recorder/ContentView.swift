@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var editedValue: String = ""
     @State private var showManualEntry: Bool = false
     @State private var manualValue: String = ""
+    @State private var manualDate = Date()
     @State private var showSidebar: Bool = false
     @State private var navigationPath = NavigationPath()
 
@@ -42,6 +43,7 @@ struct ContentView: View {
                             ToolbarItem(placement: .topBarTrailing) {
                                 Button(action: {
                                     manualValue = ""
+                                    manualDate = Date()
                                     showManualEntry = true
                                 }) {
                                     Image(systemName: "plus")
@@ -127,6 +129,7 @@ struct ContentView: View {
             MeterReadingFormSheet(
                 title: L10n.manualEntry,
                 value: $manualValue,
+                date: $manualDate,
                 confirmTitle: L10n.next,
                 onCancel: { showManualEntry = false },
                 onConfirm: {
@@ -144,7 +147,8 @@ struct ContentView: View {
                 Button(type.displayName) {
                     if let value = recognizedValue {
                         let image = capturedImage ?? UIImage()
-                        saveReading(value: value, type: type, image: image)
+                        let date = capturedImage == nil ? manualDate : Date()
+                        saveReading(value: value, type: type, image: image, date: date)
                     }
                     recognizedValue = nil
                     capturedImage = nil
@@ -173,12 +177,12 @@ struct ContentView: View {
         }
     }
 
-    func saveReading(value: String, type: MeterType, image: UIImage) {
+    func saveReading(value: String, type: MeterType, image: UIImage, date: Date = Date()) {
         let newReading = MeterReading(context: viewContext)
         newReading.id = UUID()
         newReading.value = value
         newReading.meterType = type.rawValue
-        newReading.date = Date()
+        newReading.date = date
         if let data = image.jpegData(compressionQuality: 0.7), data.count > 0 {
             newReading.imageData = data
         } else {
