@@ -3,11 +3,13 @@ import SwiftUI
 enum SidebarDestination: Hashable {
     case settings
     case visualization
+    case account
 }
 
 struct SidebarView: View {
     @Binding var showSidebar: Bool
     @Environment(\.appLanguage) private var appLanguage
+    @EnvironmentObject private var authService: AuthService
     var onNavigate: (SidebarDestination) -> Void
 
     private let animationDuration: Double = 0.3
@@ -41,6 +43,15 @@ struct SidebarView: View {
                         icon: "chart.bar.xaxis",
                         accentColor: AppTheme.accentPrimary
                     ) { onNavigate(.visualization) }
+
+                    Divider()
+                        .padding(.horizontal, AppTheme.Spacing.lg)
+
+                    SidebarMenuItem(
+                        title: authService.isAuthenticated ? L10n.account : L10n.login,
+                        icon: authService.isAuthenticated ? "person.crop.circle.fill" : "person.crop.circle",
+                        accentColor: AppTheme.accentPrimary
+                    ) { onNavigate(.account) }
 
                     Divider()
 

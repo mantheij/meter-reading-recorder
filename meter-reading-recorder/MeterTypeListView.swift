@@ -4,6 +4,7 @@ import CoreData
 struct MeterTypeListView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.appLanguage) private var appLanguage
+    @EnvironmentObject private var authService: AuthService
 
     var body: some View {
         ScrollView {
@@ -13,7 +14,7 @@ struct MeterTypeListView: View {
                         title: type.displayName,
                         iconName: type.iconName,
                         accentColor: AppTheme.meterAccent(for: index),
-                        destination: AnyView(MeterTypeReadingsView(type: type))
+                        destination: AnyView(MeterTypeReadingsView(type: type, userId: authService.currentUserId))
                     )
                 }
             }

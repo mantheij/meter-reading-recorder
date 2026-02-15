@@ -15,11 +15,11 @@ struct MeterTypeReadingsView: View {
     @State private var editingImage: UIImage? = nil
     @State private var fullscreenReading: MeterReading? = nil
 
-    init(type: MeterType) {
+    init(type: MeterType, userId: String? = nil) {
         self.type = type
         _readings = FetchRequest<MeterReading>(
             sortDescriptors: [NSSortDescriptor(keyPath: \MeterReading.date, ascending: false)],
-            predicate: NSPredicate(format: "meterType == %@", type.rawValue),
+            predicate: MeterReading.scopedPredicate(meterType: type.rawValue, userId: userId),
             animation: .default
         )
     }
@@ -43,8 +43,8 @@ struct MeterTypeReadingsView: View {
                             editingReading = reading
                             editedValue = reading.value ?? ""
                             editedDate = reading.date ?? Date()
-                            if let data = reading.imageData, let uiImg = UIImage(data: data) {
-                                editingImage = uiImg
+                            if let fileName = reading.imageFileName {
+                                editingImage = ImageStorageService.shared.loadImage(fileName: fileName)
                             } else {
                                 editingImage = nil
                             }
@@ -70,7 +70,9 @@ struct MeterTypeReadingsView: View {
             }
             Button(L10n.delete, role: .destructive) {
                 if let toDelete = pendingDeletion {
-                    viewContext.delete(toDelete)
+                    toDelete.softDeleted = true
+                    toDelete.deletedAt = Date()
+                    toDelete.modifiedAt = Date()
                     try? viewContext.save()
                     pendingDeletion = nil
                 }
@@ -93,6 +95,7 @@ struct MeterTypeReadingsView: View {
                     if let sanitized = ValueFormatter.sanitizeMeterValue(editedValue), let editing = editingReading {
                         editing.value = sanitized
                         editing.date = editedDate
+                        editing.modifiedAt = Date()
                         try? viewContext.save()
                         showEditSheet = false
                         editingReading = nil
@@ -105,7 +108,8 @@ struct MeterTypeReadingsView: View {
                 Color.black.ignoresSafeArea()
                 VStack {
                     Spacer()
-                    if let data = reading.imageData, let img = UIImage(data: data) {
+                    if let fileName = reading.imageFileName,
+                       let img = ImageStorageService.shared.loadImage(fileName: fileName) {
                         Image(uiImage: img)
                             .resizable()
                             .scaledToFit()
@@ -126,8 +130,8 @@ struct MeterTypeReadingsView: View {
             }
         }
         .onChange(of: editingReading) { _, newValue in
-            if let data = newValue?.imageData, let uiImg = UIImage(data: data) {
-                editingImage = uiImg
+            if let fileName = newValue?.imageFileName {
+                editingImage = ImageStorageService.shared.loadImage(fileName: fileName)
             } else {
                 editingImage = nil
             }

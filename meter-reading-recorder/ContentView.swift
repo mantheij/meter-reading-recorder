@@ -5,6 +5,7 @@ import CoreData
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.appLanguage) private var appLanguage
+    @EnvironmentObject private var authService: AuthService
 
     @State private var showCamera = false
     @State private var recognizedValue: String? = nil
@@ -62,6 +63,8 @@ struct ContentView: View {
                         SettingsView()
                     case .visualization:
                         VisualizationView()
+                    case .account:
+                        AccountView()
                     }
                 }
             }
@@ -179,14 +182,18 @@ struct ContentView: View {
 
     func saveReading(value: String, type: MeterType, image: UIImage, date: Date = Date()) {
         let newReading = MeterReading(context: viewContext)
-        newReading.id = UUID()
+        let readingId = UUID()
+        newReading.id = readingId
         newReading.value = value
         newReading.meterType = type.rawValue
         newReading.date = date
-        if let data = image.jpegData(compressionQuality: 0.7), data.count > 0 {
-            newReading.imageData = data
-        } else {
-            newReading.imageData = nil
+        newReading.createdAt = date
+        newReading.modifiedAt = date
+        newReading.softDeleted = false
+        newReading.userId = authService.currentUserId
+
+        if let fileName = ImageStorageService.shared.saveImage(image, id: readingId) {
+            newReading.imageFileName = fileName
         }
 
         try? viewContext.save()

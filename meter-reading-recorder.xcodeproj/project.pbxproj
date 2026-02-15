@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D8C3D6C22F41D1D5004584EC /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D8C3D6C12F41D1D5004584EC /* FirebaseAuth */; };
+		D8C3D6C52F41D1FF004584EC /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D8C3D6C42F41D1FF004584EC /* GoogleSignIn */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D82A9B4B2F168219003CBE74 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +34,22 @@
 		D82A9B542F168219003CBE74 /* meter-reading-recorderUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "meter-reading-recorderUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D8C3D6CF2F41D48C004584EC /* Exceptions for "meter-reading-recorder" folder in "meter-reading-recorder" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D82A9B372F168217003CBE74 /* meter-reading-recorder */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D82A9B3A2F168217003CBE74 /* meter-reading-recorder */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D8C3D6CF2F41D48C004584EC /* Exceptions for "meter-reading-recorder" folder in "meter-reading-recorder" target */,
+			);
 			path = "meter-reading-recorder";
 			sourceTree = "<group>";
 		};
@@ -52,6 +70,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8C3D6C22F41D1D5004584EC /* FirebaseAuth in Frameworks */,
+				D8C3D6C52F41D1FF004584EC /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +132,8 @@
 			);
 			name = "meter-reading-recorder";
 			packageProductDependencies = (
+				D8C3D6C12F41D1D5004584EC /* FirebaseAuth */,
+				D8C3D6C42F41D1FF004584EC /* GoogleSignIn */,
 			);
 			productName = "meter-reading-recorder";
 			productReference = D82A9B382F168217003CBE74 /* meter-reading-recorder.app */;
@@ -195,6 +217,10 @@
 			);
 			mainGroup = D82A9B2F2F168217003CBE74;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D8C3D6C02F41D1D5004584EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D8C3D6C32F41D1FF004584EC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D82A9B392F168217003CBE74 /* Products */;
 			projectDirPath = "";
@@ -400,6 +426,7 @@
 				DEVELOPMENT_TEAM = WJUFAYHQ72;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "meter-reading-recorder/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Kamera wird zum Erfassen der Zählerstände benötigt";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -433,6 +460,7 @@
 				DEVELOPMENT_TEAM = WJUFAYHQ72;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "meter-reading-recorder/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Kamera wird zum Erfassen der Zählerstände benötigt";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -580,6 +608,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D8C3D6C02F41D1D5004584EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.9.0;
+			};
+		};
+		D8C3D6C32F41D1FF004584EC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D8C3D6C12F41D1D5004584EC /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D8C3D6C02F41D1D5004584EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		D8C3D6C42F41D1FF004584EC /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D8C3D6C32F41D1FF004584EC /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D82A9B302F168217003CBE74 /* Project object */;
 }

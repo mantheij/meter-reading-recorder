@@ -15,7 +15,8 @@ struct ReadingRow: View {
                     .foregroundColor(AppTheme.accentSecondary.opacity(0.7))
             }
             Spacer()
-            if let imageData = reading.imageData, let image = UIImage(data: imageData) {
+            if let fileName = reading.imageFileName,
+               let image = ImageStorageService.shared.loadImage(fileName: fileName) {
                 Button {
                     onImageTap?()
                 } label: {

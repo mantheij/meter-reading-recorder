@@ -106,6 +106,39 @@ struct L10n {
     static var appearanceLight: String { s("Hell", "Light") }
     static var appearanceDark: String { s("Dunkel", "Dark") }
 
+    // MARK: Authentication
+    static var login: String { s("Anmelden", "Login") }
+    static var logout: String { s("Abmelden", "Logout") }
+    static var account: String { s("Konto", "Account") }
+    static var email: String { s("E-Mail", "Email") }
+    static var password: String { s("Passwort", "Password") }
+    static var signIn: String { s("Anmelden", "Sign In") }
+    static var createAccount: String { s("Konto erstellen", "Create Account") }
+    static var signInWithApple: String { s("Mit Apple anmelden", "Sign in with Apple") }
+    static var signInWithGoogle: String { s("Mit Google anmelden", "Sign in with Google") }
+    static var orSeparator: String { s("oder", "or") }
+    static var alreadyHaveAccount: String { s("Bereits ein Konto?", "Already have an account?") }
+    static var noAccountYet: String { s("Noch kein Konto?", "No account yet?") }
+    static var logoutConfirmation: String {
+        s("Möchtest du dich wirklich abmelden?",
+          "Do you really want to sign out?")
+    }
+    static var signedInAs: String { s("Angemeldet als", "Signed in as") }
+    static var provider: String { s("Anbieter", "Provider") }
+
+    // Auth Errors
+    static var authErrorInvalidEmail: String { s("Ungültige E-Mail-Adresse.", "Invalid email address.") }
+    static var authErrorWeakPassword: String { s("Passwort muss mindestens 8 Zeichen lang sein.", "Password must be at least 8 characters.") }
+    static var authErrorEmailInUse: String { s("Diese E-Mail-Adresse wird bereits verwendet.", "This email address is already in use.") }
+    static var authErrorWrongCredentials: String { s("E-Mail oder Passwort ist falsch.", "Email or password is incorrect.") }
+    static var authErrorNetwork: String { s("Netzwerkfehler. Bitte überprüfe deine Verbindung.", "Network error. Please check your connection.") }
+    static func authErrorRateLimited(_ seconds: Int) -> String {
+        s("Zu viele Versuche. Bitte warte \(seconds) Sekunden.",
+          "Too many attempts. Please wait \(seconds) seconds.")
+    }
+    static var authErrorCancelled: String { s("Anmeldung abgebrochen.", "Sign-in was cancelled.") }
+    static var authErrorUnknown: String { s("Ein Fehler ist aufgetreten. Bitte versuche es erneut.", "An error occurred. Please try again.") }
+
     // MARK: Visualization
     static var consumption: String { s("Verbrauch", "Consumption") }
     static var week: String { s("Woche", "Week") }

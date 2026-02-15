@@ -5,9 +5,11 @@ import CoreData
 struct VisualizationView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.appLanguage) private var appLanguage
+    @EnvironmentObject private var authService: AuthService
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \MeterReading.date, ascending: true)],
+        predicate: NSPredicate(format: "softDeleted == NO"),
         animation: .default
     ) private var readings: FetchedResults<MeterReading>
 
@@ -34,7 +36,13 @@ struct VisualizationView: View {
             .padding(AppTheme.Spacing.md)
         }
         .navigationTitle(L10n.visualization)
-        .onAppear { recompute() }
+        .onChange(of: authService.currentUserId) {
+            readings.nsPredicate = MeterReading.scopedPredicate(userId: authService.currentUserId)
+        }
+        .onAppear {
+            readings.nsPredicate = MeterReading.scopedPredicate(userId: authService.currentUserId)
+            recompute()
+        }
         .onChange(of: viewModel.selectedType) { recompute() }
         .onChange(of: viewModel.grouping) { recompute() }
         .onChange(of: viewModel.timeRange) { recompute() }
