@@ -11,7 +11,12 @@ final class AuthService: ObservableObject {
 
     static let shared = AuthService()
 
-    @Published private(set) var state: AuthState = .unauthenticated
+    private(set) var state: AuthState = .unauthenticated {
+        willSet { objectWillChange.send() }
+    }
+    var loginSuccessEvent: UUID? = nil {
+        willSet { objectWillChange.send() }
+    }
     private var stateListener: AuthStateDidChangeListenerHandle?
     private let rateLimiter = RateLimiter()
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "meter-reading-recorder", category: "Auth")
@@ -66,6 +71,7 @@ final class AuthService: ObservableObject {
             )
 
             let result = try await Auth.auth().signIn(with: firebaseCredential)
+            loginSuccessEvent = UUID()
             logger.info("Apple sign-in successful: \(result.user.uid, privacy: .private)")
 
             // Store display name from Apple on first sign-in
@@ -105,6 +111,7 @@ final class AuthService: ObservableObject {
             )
 
             let authResult = try await Auth.auth().signIn(with: credential)
+            loginSuccessEvent = UUID()
             logger.info("Google sign-in successful: \(authResult.user.uid, privacy: .private)")
         } catch let error as GIDSignInError where error.code == .canceled {
             state = .unauthenticated
@@ -133,6 +140,7 @@ final class AuthService: ObservableObject {
 
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
+            loginSuccessEvent = UUID()
             logger.info("Email sign-in successful: \(result.user.uid, privacy: .private)")
             await rateLimiter.reset()
         } catch {
@@ -150,6 +158,7 @@ final class AuthService: ObservableObject {
         state = .authenticating
         do {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
+            loginSuccessEvent = UUID()
             logger.info("Account created: \(result.user.uid, privacy: .private)")
         } catch {
             state = .unauthenticated

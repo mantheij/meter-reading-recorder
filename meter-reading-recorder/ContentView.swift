@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var manualDate = Date()
     @State private var showSidebar: Bool = false
     @State private var navigationPath = NavigationPath()
+    @State private var showLoginToast = false
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -76,6 +77,40 @@ struct ContentView: View {
             }
             .allowsHitTesting(showSidebar)
         }
+        .onChange(of: authService.isAuthenticated) { _, _ in
+            navigationPath = NavigationPath()
+        }
+        .onChange(of: authService.loginSuccessEvent) { _, event in
+            if event != nil {
+                authService.loginSuccessEvent = nil
+                withAnimation { showLoginToast = true }
+            }
+        }
+        .overlay(alignment: .top) {
+            if showLoginToast {
+                HStack(spacing: AppTheme.Spacing.sm) {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text(L10n.loginSuccessful)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, AppTheme.Spacing.md)
+                .padding(.vertical, AppTheme.Spacing.sm)
+                .background(AppTheme.accentPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+                .shadow(radius: 4)
+                .padding(.top, AppTheme.Spacing.sm)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation {
+                            showLoginToast = false
+                        }
+                    }
+                }
+            }
+        }
+        .animation(.easeInOut, value: showLoginToast)
         .fullScreenCover(isPresented: $showCamera) {
             CameraView { image in
                 processImage(image)

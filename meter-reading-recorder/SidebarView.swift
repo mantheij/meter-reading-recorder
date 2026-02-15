@@ -52,6 +52,8 @@ struct SidebarView: View {
                         icon: authService.isAuthenticated ? "person.crop.circle.fill" : "person.crop.circle",
                         accentColor: AppTheme.accentPrimary
                     ) { onNavigate(.account) }
+                    .contentTransition(.interpolate)
+                    .animation(.easeInOut(duration: 0.3), value: authService.isAuthenticated)
 
                     Divider()
 

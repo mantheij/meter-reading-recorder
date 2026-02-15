@@ -14,7 +14,7 @@ struct MeterTypeListView: View {
                         title: type.displayName,
                         iconName: type.iconName,
                         accentColor: AppTheme.meterAccent(for: index),
-                        destination: AnyView(MeterTypeReadingsView(type: type, userId: authService.currentUserId))
+                        destination: AnyView(MeterTypeReadingsView(type: type))
                     )
                 }
             }

@@ -123,6 +123,7 @@ struct L10n {
         s("Möchtest du dich wirklich abmelden?",
           "Do you really want to sign out?")
     }
+    static var loginSuccessful: String { s("Anmeldung erfolgreich", "Login successful") }
     static var signedInAs: String { s("Angemeldet als", "Signed in as") }
     static var provider: String { s("Anbieter", "Provider") }
 

@@ -5,6 +5,7 @@ struct MeterTypeReadingsView: View {
     let type: MeterType
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.appLanguage) private var appLanguage
+    @EnvironmentObject private var authService: AuthService
     @FetchRequest var readings: FetchedResults<MeterReading>
     @State private var showDeleteConfirmation: Bool = false
     @State private var pendingDeletion: MeterReading? = nil
@@ -15,11 +16,10 @@ struct MeterTypeReadingsView: View {
     @State private var editingImage: UIImage? = nil
     @State private var fullscreenReading: MeterReading? = nil
 
-    init(type: MeterType, userId: String? = nil) {
+    init(type: MeterType) {
         self.type = type
         _readings = FetchRequest<MeterReading>(
             sortDescriptors: [NSSortDescriptor(keyPath: \MeterReading.date, ascending: false)],
-            predicate: MeterReading.scopedPredicate(meterType: type.rawValue, userId: userId),
             animation: .default
         )
     }
@@ -135,6 +135,12 @@ struct MeterTypeReadingsView: View {
             } else {
                 editingImage = nil
             }
+        }
+        .onAppear {
+            readings.nsPredicate = MeterReading.scopedPredicate(meterType: type.rawValue, userId: authService.currentUserId)
+        }
+        .onChange(of: authService.currentUserId) {
+            readings.nsPredicate = MeterReading.scopedPredicate(meterType: type.rawValue, userId: authService.currentUserId)
         }
         .navigationTitle(type.displayName)
         .navigationBarTitleDisplayMode(.inline)
