@@ -3,4 +3,8 @@
 
 (WIP) App for recording meter readings for energy, water and gas consumption in a household.
 
-<img width="540" height="810" alt="839_1x_shots_so" src="https://github.com/user-attachments/assets/ac938b42-cd37-46ff-8026-0d9967674289" />
+## Record Meter Readings manually or by camera
+<img width="540" height="810" alt="979_1x_shots_so" src="https://github.com/user-attachments/assets/b26ece7e-9adb-4870-8be1-3eb5c9362f52" />
+
+## Data Visualization
+<img width="540" height="810" alt="380_1x_shots_so" src="https://github.com/user-attachments/assets/06a6a9b9-7932-4ab9-b4e4-34b426b41e81" />
