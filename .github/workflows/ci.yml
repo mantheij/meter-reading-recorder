@@ -60,6 +60,15 @@ jobs:
             -project "$PROJECT" \
             -scheme "$SCHEME"
 
+      # --- Firebase config ---
+
+      - name: Decode GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_INFO_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          echo "$GOOGLE_SERVICE_INFO_BASE64" | base64 --decode \
+            > meter-reading-recorder/GoogleService-Info.plist
+
       # --- Build ---
 
       - name: Build
@@ -81,3 +90,29 @@ jobs:
           name: xcodebuild-logs
           path: ~/Library/Developer/Xcode/DerivedData/**/Logs
           retention-days: 14
+
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for GoogleService-Info plists
+        run: |
+          FOUND=$(find . -name 'GoogleService-Info*.plist' ! -name '*.template' | head -20)
+          if [ -n "$FOUND" ]; then
+            echo "::error::Found GoogleService-Info plist files that should not be committed:"
+            echo "$FOUND"
+            exit 1
+          fi
+
+      - name: Check for Google API key patterns
+        run: |
+          MATCHES=$(grep -rE 'AIzaSy[0-9A-Za-z_-]{33}' --include='*.swift' --include='*.plist' --include='*.json' --include='*.yml' --include='*.yaml' . || true)
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Found Google API key pattern in source files:"
+            echo "$MATCHES"
+            exit 1
+          fi

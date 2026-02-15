@@ -38,6 +38,13 @@ Tests exist in `meter-reading-recorderTests/` (Swift Testing) and `meter-reading
 - `Localization.swift` — `L10n` struct reads `@AppStorage("appLanguage")` from UserDefaults; all UI strings go through `L10n.*` static properties (DE/EN)
 - `AppearanceManager.swift` — `AppAppearance` enum (system/light/dark) persisted via `@AppStorage("appAppearance")`; applied as `.preferredColorScheme()` on the root WindowGroup
 
+### Firebase Configuration
+- `GoogleService-Info.plist` is **not checked into Git** — it contains API keys and is listed in `.gitignore`
+- A template with placeholder values exists at `meter-reading-recorder/GoogleService-Info.plist.template`
+- **Local development:** Download `GoogleService-Info.plist` from the Firebase Console and place it in `meter-reading-recorder/`
+- **CI:** The plist is injected from the GitHub Secret `GOOGLE_SERVICE_INFO_PLIST` (base64-encoded) during the build workflow
+- A pre-commit hook in `.githooks/` prevents accidental commits of secret files — activate it with: `git config core.hooksPath .githooks`
+
 ### Xcode Project
 - Uses `PBXFileSystemSynchronizedRootGroup` — new Swift files in `meter-reading-recorder/` are automatically included in the build without editing `project.pbxproj`
 - Swift 5.0, iOS deployment target 18.0

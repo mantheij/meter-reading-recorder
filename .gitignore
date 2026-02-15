@@ -1,0 +1,15 @@
+# Firebase config (contains API keys)
+**/GoogleService-Info.plist
+**/GoogleService-Info_OLD.plist
+
+# Xcode
+*.xcuserstate
+xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store
+
+# Secrets
+*.p12
+*.mobileprovision
