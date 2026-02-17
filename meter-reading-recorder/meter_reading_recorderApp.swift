@@ -2,6 +2,7 @@ import SwiftUI
 import CoreData
 import FirebaseCore
 import FirebaseFirestore
+import FirebaseAppCheck
 import GoogleSignIn
 
 @main
@@ -11,6 +12,13 @@ struct MeterAppApp: App {
     @AppStorage("appLanguage") private var languageRaw: String = AppLanguage.de.rawValue
 
     init() {
+        #if DEBUG
+        let providerFactory = AppCheckDebugProviderFactory()
+        #else
+        let providerFactory = AppAttestProviderFactory()
+        #endif
+        AppCheck.setAppCheckProviderFactory(providerFactory)
+
         FirebaseApp.configure()
         if let clientID = FirebaseApp.app()?.options.clientID {
             GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)

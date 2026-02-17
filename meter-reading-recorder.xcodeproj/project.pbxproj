@@ -10,6 +10,7 @@
 		D8C3D6C22F41D1D5004584EC /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D8C3D6C12F41D1D5004584EC /* FirebaseAuth */; };
 		D8C3D6C52F41D1FF004584EC /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = D8C3D6C42F41D1FF004584EC /* GoogleSignIn */; };
 		D8D4E7A12F61A001004584EC /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D8D4E7A02F61A001004584EC /* FirebaseFirestore */; };
+		D8D4E7A32F61A002004584EC /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = D8D4E7A22F61A002004584EC /* FirebaseAppCheck */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +75,7 @@
 				D8C3D6C22F41D1D5004584EC /* FirebaseAuth in Frameworks */,
 				D8C3D6C52F41D1FF004584EC /* GoogleSignIn in Frameworks */,
 				D8D4E7A12F61A001004584EC /* FirebaseFirestore in Frameworks */,
+				D8D4E7A32F61A002004584EC /* FirebaseAppCheck in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +139,7 @@
 				D8C3D6C12F41D1D5004584EC /* FirebaseAuth */,
 				D8C3D6C42F41D1FF004584EC /* GoogleSignIn */,
 				D8D4E7A02F61A001004584EC /* FirebaseFirestore */,
+				D8D4E7A22F61A002004584EC /* FirebaseAppCheck */,
 			);
 			productName = "meter-reading-recorder";
 			productReference = D82A9B382F168217003CBE74 /* meter-reading-recorder.app */;
@@ -646,6 +649,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D8C3D6C02F41D1D5004584EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		D8D4E7A22F61A002004584EC /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D8C3D6C02F41D1D5004584EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

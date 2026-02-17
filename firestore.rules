@@ -3,19 +3,60 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Allowed meter types
+    function isValidType(val) {
+      return val in ['water', 'electricity', 'gas'];
+    }
+
     match /users/{userId}/readings/{readingId} {
+
+      // Fields every reading must contain
+      function requiredFields() {
+        return ['id', 'userId', 'type', 'value', 'date', 'createdAt', 'updatedAt', 'deviceId', 'version'];
+      }
+
+      // Fields that are allowed but not required
+      function optionalFields() {
+        return ['deletedAt', 'imagePath'];
+      }
+
+      // Block unknown fields
+      function hasOnlyAllowedFields() {
+        return request.resource.data.keys().hasOnly(requiredFields().concat(optionalFields()));
+      }
+
+      // Validate all field types and constraints
+      function isValidReading() {
+        let d = request.resource.data;
+        return d.id is string && d.id.size() <= 36
+            && d.userId is string && d.userId.size() <= 128
+            && d.type is string && isValidType(d.type)
+            && d.value is string && d.value.size() <= 20
+            && d.date is timestamp
+            && d.createdAt is timestamp
+            && d.updatedAt is timestamp
+            && d.deviceId is string && d.deviceId.size() <= 36
+            && d.version is int
+            // Optional fields — validate only when present
+            && (!d.keys().hasAny(['deletedAt']) || d.deletedAt is timestamp)
+            && (!d.keys().hasAny(['imagePath']) || (d.imagePath is string && d.imagePath.size() <= 500));
+      }
+
       allow read: if request.auth != null && request.auth.uid == userId;
 
       allow create: if request.auth != null
         && request.auth.uid == userId
         && request.resource.data.userId == userId
-        && request.resource.data.keys().hasAll(['id', 'userId', 'type', 'value', 'date', 'createdAt', 'updatedAt', 'deviceId', 'version'])
-        && request.resource.data.version is int;
+        && request.resource.data.keys().hasAll(requiredFields())
+        && hasOnlyAllowedFields()
+        && isValidReading()
+        && request.resource.data.version >= 1;
 
       allow update: if request.auth != null
         && request.auth.uid == userId
         && request.resource.data.userId == userId
-        && request.resource.data.version is int
+        && hasOnlyAllowedFields()
+        && isValidReading()
         && request.resource.data.version > resource.data.version;
 
       allow delete: if request.auth != null && request.auth.uid == userId;
