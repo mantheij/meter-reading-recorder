@@ -185,9 +185,9 @@ final class SyncService: ObservableObject {
     private func resolveConflict(local: MeterReading, remote: MeterReadingDocument, context: NSManagedObjectContext) {
         let readingId = local.id?.uuidString ?? "nil"
 
-        // If local is already synced and remote is newer, just apply
-        if local.syncStatusEnum == .synced {
-            logger.debug("Conflict: \(readingId) — local is synced, applying remote (version \(remote.version))")
+        // If local is already synced or stuck in error, accept the remote data
+        if local.syncStatusEnum == .synced || local.syncStatusEnum == .error {
+            logger.debug("Conflict: \(readingId) — local is \(local.syncStatusEnum == .synced ? "synced" : "error"), applying remote (version \(remote.version))")
             remote.apply(to: local, context: context)
             return
         }
@@ -263,19 +263,23 @@ final class SyncService: ObservableObject {
         Task {
             await context.perform {
                 let request = MeterReading.fetchRequest()
-                request.predicate = NSPredicate(format: "syncStatus == %d AND userId == %@",
-                                                SyncStatus.pending.rawValue, userId)
+                request.predicate = NSPredicate(format: "(syncStatus == %d OR syncStatus == %d) AND userId == %@",
+                                                SyncStatus.pending.rawValue, SyncStatus.error.rawValue, userId)
 
                 do {
-                    let pendingReadings = try context.fetch(request)
-                    guard !pendingReadings.isEmpty else {
-                        self.logger.info("Push: no pending readings found")
+                    let pushableReadings = try context.fetch(request)
+                    guard !pushableReadings.isEmpty else {
+                        self.logger.info("Push: no pending/error readings found")
                         return
                     }
-                    self.logger.info("Push: found \(pendingReadings.count) pending reading(s)")
+                    self.logger.info("Push: found \(pushableReadings.count) reading(s) to push")
 
-                    for reading in pendingReadings {
-                        self.logger.debug("Push: queuing \(reading.id?.uuidString ?? "nil") (type=\(reading.meterType ?? "nil"), value=\(reading.value ?? "nil"), version=\(reading.version), userId=\(reading.userId ?? "nil", privacy: .private))")
+                    for reading in pushableReadings {
+                        // Fix missing deviceId from pre-sync records
+                        if reading.deviceId == nil || reading.deviceId?.isEmpty == true {
+                            reading.deviceId = DeviceIdentifier.current
+                        }
+                        self.logger.debug("Push: queuing \(reading.id?.uuidString ?? "nil") (type=\(reading.meterType ?? "nil"), value=\(reading.value ?? "nil"), version=\(reading.version), syncStatus=\(reading.syncStatus), userId=\(reading.userId ?? "nil", privacy: .private))")
                         Task { [weak self] in
                             await self?.pushSingleReading(reading, userId: userId, context: context)
                         }
