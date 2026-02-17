@@ -76,30 +76,44 @@ struct PersistenceController {
         }
     }
 
-    /// Adopts all local readings (userId == nil) by assigning the given userId.
+    /// Adopts all local readings (userId == nil) by assigning the given userId and marking for sync.
     func adoptLocalData(for userId: String) {
         let context = container.newBackgroundContext()
         context.perform {
-            let request = NSBatchUpdateRequest(entityName: "MeterReading")
+            let request = MeterReading.fetchRequest()
             request.predicate = NSPredicate(format: "userId == nil")
-            request.propertiesToUpdate = ["userId": userId]
-            request.resultType = .updatedObjectIDsResultType
 
-            guard let result = try? context.execute(request) as? NSBatchUpdateResult,
-                  let objectIDs = result.result as? [NSManagedObjectID] else { return }
+            guard let results = try? context.fetch(request), !results.isEmpty else { return }
 
+            for reading in results {
+                reading.userId = userId
+                reading.syncStatus = SyncStatus.pending.rawValue
+                if reading.version == 0 {
+                    reading.version = 1
+                }
+                if reading.deviceId == nil {
+                    reading.deviceId = DeviceIdentifier.current
+                }
+            }
+
+            try? context.save()
+
+            let objectIDs = results.map { $0.objectID }
             let changes = [NSUpdatedObjectsKey: objectIDs]
             NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [self.container.viewContext])
         }
     }
 
-    /// Permanently deletes soft-deleted records older than 30 days and their image files.
+    /// Permanently deletes soft-deleted records older than 30 days that have been synced, and their image files.
     private func cleanupTombstones() {
         let context = container.newBackgroundContext()
         context.perform {
             let request = MeterReading.fetchRequest()
             guard let cutoff = Calendar.current.date(byAdding: .day, value: -30, to: Date()) else { return }
-            request.predicate = NSPredicate(format: "softDeleted == YES AND deletedAt < %@", cutoff as NSDate)
+            request.predicate = NSPredicate(
+                format: "softDeleted == YES AND deletedAt < %@ AND syncStatus == %d",
+                cutoff as NSDate, SyncStatus.synced.rawValue
+            )
 
             guard let tombstones = try? context.fetch(request), !tombstones.isEmpty else { return }
 

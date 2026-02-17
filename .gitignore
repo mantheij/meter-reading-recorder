@@ -10,6 +10,9 @@ DerivedData/
 # macOS
 .DS_Store
 
+# Node
+node_modules/
+
 # Secrets
 *.p12
 *.mobileprovision

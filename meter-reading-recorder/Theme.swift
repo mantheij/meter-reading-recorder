@@ -62,6 +62,12 @@ enum AppTheme {
         0.2
     }
 
+    // MARK: Sync Status Colors
+    static let syncPending = Color.orange
+    static let syncSynced = Color.green
+    static let syncError = Color.red
+    static let syncConflict = Color.yellow
+
     // MARK: Shadows
     static let cardShadow = ShadowStyle.drop(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
     static let elevatedShadow = ShadowStyle.drop(color: .black.opacity(0.15), radius: 12, x: 4, y: 0)

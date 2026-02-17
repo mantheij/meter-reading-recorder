@@ -158,4 +158,26 @@ struct L10n {
     }
     static var period: String { s("Zeitraum", "Period") }
     static var vsLastPeriod: String { s("ggü. Vorperiode", "vs last period") }
+
+    // MARK: Sync
+    static var syncing: String { s("Synchronisiere…", "Syncing…") }
+    static var synced: String { s("Synchronisiert", "Synced") }
+    static var pending: String { s("Ausstehend", "Pending") }
+    static var syncError: String { s("Sync-Fehler", "Sync Error") }
+    static var conflict: String { s("Konflikt", "Conflict") }
+    static var offline: String { s("Offline", "Offline") }
+    static var offlineMessage: String { s("Änderungen werden synchronisiert, sobald du wieder online bist.", "Changes will sync when you're back online.") }
+    static func pendingChanges(_ count: Int) -> String {
+        s("\(count) ausstehende Änderung\(count == 1 ? "" : "en")",
+          "\(count) pending change\(count == 1 ? "" : "s")")
+    }
+    static var conflictDetected: String { s("Konflikt erkannt", "Conflict Detected") }
+    static var conflictMessage: String {
+        s("Dieser Eintrag wurde auf einem anderen Gerät geändert. Welche Version möchtest du behalten?",
+          "This entry was modified on another device. Which version would you like to keep?")
+    }
+    static var keepMine: String { s("Meine behalten", "Keep Mine") }
+    static var acceptRemote: String { s("Cloud übernehmen", "Accept Cloud") }
+    static var yourVersion: String { s("Deine Version", "Your Version") }
+    static var cloudVersion: String { s("Cloud-Version", "Cloud Version") }
 }

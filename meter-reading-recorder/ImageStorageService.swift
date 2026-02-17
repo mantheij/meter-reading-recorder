@@ -47,6 +47,22 @@ class ImageStorageService {
         try? FileManager.default.removeItem(at: fileURL)
     }
 
+    func imageFileURL(fileName: String) -> URL? {
+        let fileURL = imagesDirectory.appendingPathComponent(fileName)
+        return FileManager.default.fileExists(atPath: fileURL.path) ? fileURL : nil
+    }
+
+    func cacheImageData(_ data: Data, readingId: UUID) -> String? {
+        let fileName = "\(readingId.uuidString).jpg"
+        let fileURL = imagesDirectory.appendingPathComponent(fileName)
+        do {
+            try data.write(to: fileURL)
+            return fileName
+        } catch {
+            return nil
+        }
+    }
+
     func migrateFromData(_ data: Data, id: UUID) -> String? {
         let fileName = "\(id.uuidString).jpg"
         let fileURL = imagesDirectory.appendingPathComponent(fileName)

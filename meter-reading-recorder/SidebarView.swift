@@ -30,6 +30,17 @@ struct SidebarView: View {
 
                 VStack(alignment: .leading, spacing: 0) {
                     SidebarMenuItem(
+                        title: authService.isAuthenticated ? L10n.account : L10n.login,
+                        icon: authService.isAuthenticated ? "person.crop.circle.fill" : "person.crop.circle",
+                        accentColor: AppTheme.accentPrimary
+                    ) { onNavigate(.account) }
+                    .contentTransition(.interpolate)
+                    .animation(.easeInOut(duration: 0.3), value: authService.isAuthenticated)
+
+                    Divider()
+                        .padding(.horizontal, AppTheme.Spacing.lg)
+
+                    SidebarMenuItem(
                         title: L10n.settings,
                         icon: "gear",
                         accentColor: AppTheme.accentPrimary
@@ -43,17 +54,6 @@ struct SidebarView: View {
                         icon: "chart.bar.xaxis",
                         accentColor: AppTheme.accentPrimary
                     ) { onNavigate(.visualization) }
-
-                    Divider()
-                        .padding(.horizontal, AppTheme.Spacing.lg)
-
-                    SidebarMenuItem(
-                        title: authService.isAuthenticated ? L10n.account : L10n.login,
-                        icon: authService.isAuthenticated ? "person.crop.circle.fill" : "person.crop.circle",
-                        accentColor: AppTheme.accentPrimary
-                    ) { onNavigate(.account) }
-                    .contentTransition(.interpolate)
-                    .animation(.easeInOut(duration: 0.3), value: authService.isAuthenticated)
 
                     Divider()
 

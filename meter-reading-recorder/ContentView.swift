@@ -25,7 +25,13 @@ struct ContentView: View {
     var body: some View {
         ZStack(alignment: .leading) {
             NavigationStack(path: $navigationPath) {
-                VStack {
+                VStack(spacing: 0) {
+                    if authService.isAuthenticated {
+                        SyncBanner(
+                            syncService: SyncService.shared,
+                            networkMonitor: NetworkMonitor.shared
+                        )
+                    }
                     MeterTypeListView()
                         .toolbar {
                             ToolbarItem(placement: .topBarLeading) {
@@ -226,6 +232,9 @@ struct ContentView: View {
         newReading.modifiedAt = date
         newReading.softDeleted = false
         newReading.userId = authService.currentUserId
+        newReading.syncStatusEnum = .pending
+        newReading.version = 1
+        newReading.deviceId = DeviceIdentifier.current
 
         if let fileName = ImageStorageService.shared.saveImage(image, id: readingId) {
             newReading.imageFileName = fileName

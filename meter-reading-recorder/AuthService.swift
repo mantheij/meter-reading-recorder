@@ -45,7 +45,9 @@ final class AuthService: ObservableObject {
                     self.state = .authenticated(user)
                     self.logger.info("User authenticated: \(firebaseUser.uid, privacy: .private)")
                     self.adoptLocalDataIfNeeded(userId: user.uid)
+                    SyncService.shared.startSync(for: user.uid)
                 } else {
+                    SyncService.shared.stopSync()
                     self.state = .unauthenticated
                     self.logger.info("User signed out")
                 }
@@ -170,6 +172,7 @@ final class AuthService: ObservableObject {
 
     func signOut() throws {
         do {
+            SyncService.shared.stopSync()
             try Auth.auth().signOut()
             KeychainService.shared.clearAll()
             state = .unauthenticated

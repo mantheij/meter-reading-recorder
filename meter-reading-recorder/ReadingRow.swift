@@ -10,9 +10,12 @@ struct ReadingRow: View {
                 Text(reading.value ?? "N/A")
                     .font(.title2)
                     .foregroundColor(AppTheme.textPrimary)
-                Text(reading.date ?? Date(), style: .date)
-                    .font(.caption)
-                    .foregroundColor(AppTheme.accentSecondary.opacity(0.7))
+                HStack(spacing: 4) {
+                    Text(reading.date ?? Date(), style: .date)
+                        .font(.caption)
+                        .foregroundColor(AppTheme.accentSecondary.opacity(0.7))
+                    SyncStatusIndicator(status: reading.syncStatusEnum)
+                }
             }
             Spacer()
             if let fileName = reading.imageFileName,

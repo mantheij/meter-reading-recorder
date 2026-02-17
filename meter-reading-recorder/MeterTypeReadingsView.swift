@@ -15,6 +15,7 @@ struct MeterTypeReadingsView: View {
     @State private var editedDate = Date()
     @State private var editingImage: UIImage? = nil
     @State private var fullscreenReading: MeterReading? = nil
+    @State private var conflictReading: MeterReading? = nil
 
     init(type: MeterType) {
         self.type = type
@@ -38,8 +39,20 @@ struct MeterTypeReadingsView: View {
                         ReadingRow(reading: reading, onImageTap: {
                             fullscreenReading = reading
                         })
+                        .overlay(alignment: .topTrailing) {
+                            if reading.hasConflict {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(AppTheme.syncConflict)
+                                    .font(.caption)
+                                    .padding(4)
+                            }
+                        }
                         .contentShape(Rectangle())
                         .onTapGesture {
+                            if reading.hasConflict {
+                                conflictReading = reading
+                                return
+                            }
                             editingReading = reading
                             editedValue = reading.value ?? ""
                             editedDate = reading.date ?? Date()
@@ -73,6 +86,8 @@ struct MeterTypeReadingsView: View {
                     toDelete.softDeleted = true
                     toDelete.deletedAt = Date()
                     toDelete.modifiedAt = Date()
+                    toDelete.syncStatusEnum = .pending
+                    toDelete.version += 1
                     try? viewContext.save()
                     pendingDeletion = nil
                 }
@@ -96,6 +111,9 @@ struct MeterTypeReadingsView: View {
                         editing.value = sanitized
                         editing.date = editedDate
                         editing.modifiedAt = Date()
+                        editing.syncStatusEnum = .pending
+                        editing.version += 1
+                        editing.deviceId = DeviceIdentifier.current
                         try? viewContext.save()
                         showEditSheet = false
                         editingReading = nil
@@ -141,6 +159,9 @@ struct MeterTypeReadingsView: View {
         }
         .onChange(of: authService.currentUserId) {
             readings.nsPredicate = MeterReading.scopedPredicate(meterType: type.rawValue, userId: authService.currentUserId)
+        }
+        .sheet(item: $conflictReading) { reading in
+            ConflictResolutionView(reading: reading)
         }
         .navigationTitle(type.displayName)
         .navigationBarTitleDisplayMode(.inline)

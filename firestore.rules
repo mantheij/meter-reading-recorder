@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId}/readings/{readingId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.userId == userId
+        && request.resource.data.keys().hasAll(['id', 'userId', 'type', 'value', 'date', 'createdAt', 'updatedAt', 'deviceId', 'version'])
+        && request.resource.data.version is int;
+
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.userId == userId
+        && request.resource.data.version is int
+        && request.resource.data.version > resource.data.version;
+
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
