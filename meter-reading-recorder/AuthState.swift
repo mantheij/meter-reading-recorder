@@ -6,12 +6,14 @@ enum AuthState: Equatable {
     case unauthenticated
     case authenticating
     case authenticated(AuthUser)
+    case emailNotVerified(AuthUser)
 
     static func == (lhs: AuthState, rhs: AuthState) -> Bool {
         switch (lhs, rhs) {
         case (.unauthenticated, .unauthenticated): return true
         case (.authenticating, .authenticating): return true
         case (.authenticated(let a), .authenticated(let b)): return a.uid == b.uid
+        case (.emailNotVerified(let a), .emailNotVerified(let b)): return a.uid == b.uid
         default: return false
         }
     }
@@ -25,6 +27,7 @@ struct AuthUser {
     let displayName: String?
     let photoURL: URL?
     let provider: AuthProvider
+    let emailVerified: Bool
 }
 
 // MARK: - Auth Provider

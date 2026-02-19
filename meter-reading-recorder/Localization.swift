@@ -123,7 +123,26 @@ struct L10n {
         s("Möchtest du dich wirklich abmelden?",
           "Do you really want to sign out?")
     }
+    static var forgotPassword: String { s("Passwort vergessen?", "Forgot password?") }
+    static var resetPassword: String { s("Passwort zurücksetzen", "Reset Password") }
+    static var sendResetLink: String { s("Reset-Link senden", "Send Reset Link") }
+    static var resetEmailSent: String {
+        s("Wenn ein Konto mit dieser E-Mail existiert, wurde ein Link zum Zurücksetzen gesendet.",
+          "If an account with this email exists, a reset link has been sent.")
+    }
     static var loginSuccessful: String { s("Anmeldung erfolgreich", "Login successful") }
+
+    // Email Verification
+    static var emailVerificationTitle: String { s("E-Mail bestätigen", "Verify Your Email") }
+    static var emailVerificationMessage: String {
+        s("Wir haben dir eine Bestätigungs-E-Mail gesendet. Bitte überprüfe dein Postfach und klicke auf den Link, um dein Konto zu aktivieren.",
+          "We've sent you a verification email. Please check your inbox and click the link to activate your account.")
+    }
+    static var resendVerificationEmail: String { s("Bestätigungs-Mail erneut senden", "Resend Verification Email") }
+    static var verificationEmailSent: String { s("Bestätigungs-Mail gesendet", "Verification email sent") }
+    static var alreadyVerified: String { s("Ich habe bestätigt", "I've Verified") }
+    static var emailNotYetVerified: String { s("E-Mail noch nicht bestätigt. Bitte überprüfe dein Postfach.", "Email not yet verified. Please check your inbox.") }
+    static var checkSpamFolder: String { s("Überprüfe auch deinen Spam-Ordner.", "Also check your spam folder.") }
     static var signedInAs: String { s("Angemeldet als", "Signed in as") }
     static var provider: String { s("Anbieter", "Provider") }
 

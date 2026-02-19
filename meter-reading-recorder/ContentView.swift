@@ -22,7 +22,16 @@ struct ContentView: View {
     @State private var navigationPath = NavigationPath()
     @State private var showLoginToast = false
 
+    private var isEmailNotVerified: Bool {
+        if case .emailNotVerified = authService.state { return true }
+        return false
+    }
+
     var body: some View {
+        if isEmailNotVerified {
+            EmailVerificationView()
+                .environmentObject(authService)
+        } else {
         ZStack(alignment: .leading) {
             NavigationStack(path: $navigationPath) {
                 VStack(spacing: 0) {
@@ -204,6 +213,7 @@ struct ContentView: View {
                 capturedImage = nil
                 showTypeSelector = false
             }
+        }
         }
     }
 

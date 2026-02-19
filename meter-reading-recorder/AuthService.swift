@@ -42,10 +42,17 @@ final class AuthService: ObservableObject {
                 guard let self else { return }
                 if let firebaseUser {
                     let user = self.mapFirebaseUser(firebaseUser)
-                    self.state = .authenticated(user)
-                    self.logger.info("User authenticated: \(firebaseUser.uid, privacy: .private)")
-                    self.adoptLocalDataIfNeeded(userId: user.uid)
-                    SyncService.shared.startSync(for: user.uid)
+                    // Block unverified email/password accounts
+                    if user.provider == .emailPassword && !firebaseUser.isEmailVerified {
+                        SyncService.shared.stopSync()
+                        self.state = .emailNotVerified(user)
+                        self.logger.info("User email not verified: \(firebaseUser.uid, privacy: .private)")
+                    } else {
+                        self.state = .authenticated(user)
+                        self.logger.info("User authenticated: \(firebaseUser.uid, privacy: .private)")
+                        self.adoptLocalDataIfNeeded(userId: user.uid)
+                        SyncService.shared.startSync(for: user.uid)
+                    }
                 } else {
                     SyncService.shared.stopSync()
                     self.state = .unauthenticated
@@ -160,11 +167,83 @@ final class AuthService: ObservableObject {
         state = .authenticating
         do {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
-            loginSuccessEvent = UUID()
             logger.info("Account created: \(result.user.uid, privacy: .private)")
+            // State listener will set .emailNotVerified
+
+            // Send verification email separately — account creation should not fail if this errors
+            do {
+                try await result.user.sendEmailVerification()
+                logger.info("Verification email sent: \(result.user.uid, privacy: .private)")
+            } catch {
+                logger.error("Failed to send verification email: \(error.localizedDescription, privacy: .private)")
+            }
         } catch {
             state = .unauthenticated
             throw mapFirebaseError(error)
+        }
+    }
+
+    // MARK: - Password Reset
+
+    func sendPasswordReset(email: String) async throws {
+        guard InputValidator.isValidEmail(email) else { throw AuthError.invalidEmail }
+
+        guard await rateLimiter.canAttempt() else {
+            let seconds = await rateLimiter.remainingLockoutSeconds
+            throw AuthError.rateLimited(seconds: Int(seconds))
+        }
+
+        await rateLimiter.recordAttempt()
+
+        do {
+            try await Auth.auth().sendPasswordReset(withEmail: email)
+            logger.info("Password reset email sent for: \(email, privacy: .private)")
+            await rateLimiter.reset()
+        } catch {
+            let code = AuthErrorCode(rawValue: (error as NSError).code)
+            // Swallow userNotFound to prevent info leaks — always show success
+            if code == .userNotFound {
+                logger.info("Password reset requested for non-existent email: \(email, privacy: .private)")
+                await rateLimiter.reset()
+                return
+            }
+            throw mapFirebaseError(error)
+        }
+    }
+
+    // MARK: - Email Verification
+
+    func resendVerificationEmail() async throws {
+        guard let firebaseUser = Auth.auth().currentUser else { throw AuthError.unknown }
+
+        guard await rateLimiter.canAttempt() else {
+            let seconds = await rateLimiter.remainingLockoutSeconds
+            throw AuthError.rateLimited(seconds: Int(seconds))
+        }
+
+        await rateLimiter.recordAttempt()
+
+        do {
+            try await firebaseUser.sendEmailVerification()
+            logger.info("Verification email resent: \(firebaseUser.uid, privacy: .private)")
+            await rateLimiter.reset()
+        } catch {
+            throw mapFirebaseError(error)
+        }
+    }
+
+    func reloadUser() async throws {
+        guard let firebaseUser = Auth.auth().currentUser else { throw AuthError.unknown }
+        try await firebaseUser.reload()
+        let user = mapFirebaseUser(firebaseUser)
+        if firebaseUser.isEmailVerified {
+            state = .authenticated(user)
+            loginSuccessEvent = UUID()
+            adoptLocalDataIfNeeded(userId: user.uid)
+            SyncService.shared.startSync(for: user.uid)
+            logger.info("Email verified, user authenticated: \(firebaseUser.uid, privacy: .private)")
+        } else {
+            state = .emailNotVerified(user)
         }
     }
 
@@ -209,7 +288,8 @@ final class AuthService: ObservableObject {
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
-            provider: provider
+            provider: provider,
+            emailVerified: user.isEmailVerified
         )
     }
 

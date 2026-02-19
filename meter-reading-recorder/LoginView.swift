@@ -13,6 +13,7 @@ struct LoginView: View {
     @State private var currentNonce: String?
     @State private var lockoutSeconds: Int = 0
     @State private var lockoutTimer: Timer?
+    @State private var showPasswordReset = false
 
     var body: some View {
         ScrollView {
@@ -81,6 +82,16 @@ struct LoginView: View {
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                 }
 
+                // Forgot password
+                if !isCreateMode {
+                    Button(action: { showPasswordReset = true }) {
+                        Text(L10n.forgotPassword)
+                            .font(.subheadline)
+                            .foregroundColor(AppTheme.accentPrimary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+
                 // Rate limiter feedback
                 if lockoutSeconds > 0 {
                     Text(L10n.authErrorRateLimited(lockoutSeconds))
@@ -121,6 +132,10 @@ struct LoginView: View {
                 Text(errorMessage)
             }
         })
+        .sheet(isPresented: $showPasswordReset) {
+            PasswordResetView(email: email)
+                .environmentObject(authService)
+        }
         .onDisappear {
             lockoutTimer?.invalidate()
         }
