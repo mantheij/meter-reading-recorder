@@ -184,6 +184,13 @@ struct L10n {
     static var trendIncreasing:  String { s("Steigend",        "Increasing") }
     static var trendDecreasing:  String { s("Sinkend",         "Decreasing") }
     static var trendStable:      String { s("Stabil",          "Stable") }
+    static var tariffs: String         { s("Tarife",           "Tariffs") }
+    static var pricePerUnit: String    { s("Preis pro Einheit","Price per unit") }
+    static var costs: String           { s("Kosten",           "Costs") }
+    static var totalCost: String       { s("Gesamtkosten",     "Total Cost") }
+    static var avgCostPerMonth: String { s("Ø Kosten/Monat",  "Avg. Cost/Month") }
+    static var costChart: String       { s("Kostenverlauf",    "Cost Chart") }
+    static var currencySymbol: String  { s("€",               "€") }
 
     // MARK: Sync
     static var syncing: String { s("Synchronisiere…", "Syncing…") }

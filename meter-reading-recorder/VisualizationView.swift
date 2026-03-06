@@ -15,6 +15,10 @@ struct VisualizationView: View {
 
     @State private var viewModel = VisualizationViewModel()
 
+    @AppStorage("meterPrice_water")       private var waterPriceStr       = ""
+    @AppStorage("meterPrice_electricity") private var electricityPriceStr = ""
+    @AppStorage("meterPrice_gas")         private var gasPriceStr         = ""
+
     var body: some View {
         ScrollView {
             VStack(spacing: AppTheme.Spacing.md) {
@@ -30,6 +34,12 @@ struct VisualizationView: View {
                     }
                     if let trend = viewModel.trend {
                         trendSection(trend)
+                    }
+                    if !viewModel.costDataPoints.isEmpty {
+                        costChartSection
+                        if let cs = viewModel.costSummary {
+                            costSummaryCard(cs)
+                        }
                     }
                 } else {
                     EmptyStateView(
@@ -57,6 +67,9 @@ struct VisualizationView: View {
         .onChange(of: viewModel.customEndMonth)  { recompute() }
         .onChange(of: readings.count)            { recompute() }
         .onChange(of: appLanguage)               { recompute() }
+        .onChange(of: waterPriceStr)             { recompute() }
+        .onChange(of: electricityPriceStr)       { recompute() }
+        .onChange(of: gasPriceStr)               { recompute() }
     }
 
     // MARK: - Meter Type Picker
@@ -248,10 +261,63 @@ struct VisualizationView: View {
         .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
     }
 
+    // MARK: - Cost Chart
+
+    private var costChartSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+            Text(L10n.costChart)
+                .font(.headline)
+                .padding(.bottom, 2)
+            Chart(viewModel.costDataPoints) { point in
+                BarMark(
+                    x: .value(L10n.period, point.label),
+                    y: .value(L10n.costs, point.value)
+                )
+                .foregroundStyle(Color.orange)
+                .cornerRadius(4)
+            }
+            .chartYAxisLabel(L10n.currencySymbol)
+            .frame(height: 200)
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.surfaceBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
+    }
+
+    private func costSummaryCard(_ cs: CostSummary) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+            HStack {
+                Text(L10n.totalCost).font(.headline)
+                Spacer()
+                Text(String(format: "%.2f €", cs.totalCost)).font(.headline)
+            }
+            HStack {
+                Text(L10n.avgCostPerMonth).font(.subheadline)
+                Spacer()
+                Text(String(format: "%.2f €", cs.averageCost)).font(.subheadline)
+            }
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.surfaceBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
+    }
+
     // MARK: - Helpers
 
     private func recompute() {
-        viewModel.compute(readings: Array(readings))
+        viewModel.compute(readings: Array(readings), pricePerUnit: priceForSelectedType())
+    }
+
+    private func priceForSelectedType() -> Double {
+        let str: String
+        switch viewModel.selectedType {
+        case .water:       str = waterPriceStr
+        case .electricity: str = electricityPriceStr
+        case .gas:         str = gasPriceStr
+        }
+        return Double(str.replacingOccurrences(of: ",", with: ".")) ?? 0
     }
 
     private func trendArrow(_ percent: Double) -> String {

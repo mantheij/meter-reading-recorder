@@ -17,6 +17,11 @@ struct ConsumptionSummary {
     let trendPercent: Double?
 }
 
+struct CostSummary {
+    let totalCost: Double
+    let averageCost: Double
+}
+
 struct TrendLinePoint: Identifiable {
     let id = UUID()
     let index: Double
@@ -83,8 +88,10 @@ class VisualizationViewModel {
     var summary: ConsumptionSummary?
     var trend: ConsumptionTrend?
     var hasEnoughData: Bool = false
+    var costDataPoints: [ConsumptionDataPoint] = []
+    var costSummary: CostSummary?
 
-    func compute(readings: [MeterReading]) {
+    func compute(readings: [MeterReading], pricePerUnit: Double = 0) {
         let calendar = Calendar.current
         let now = Date()
 
@@ -119,6 +126,8 @@ class VisualizationViewModel {
             summary = nil
             trend = nil
             hasEnoughData = false
+            costDataPoints = []
+            costSummary = nil
             return
         }
 
@@ -170,6 +179,19 @@ class VisualizationViewModel {
         }
 
         dataPoints = points
+
+        // Calculate cost data points if price is configured
+        if pricePerUnit > 0 {
+            costDataPoints = points.map { pt in
+                ConsumptionDataPoint(label: pt.label, value: pt.value * pricePerUnit, date: pt.date)
+            }
+            let totalCost = costDataPoints.reduce(0) { $0 + $1.value }
+            let avgCost = costDataPoints.isEmpty ? 0 : totalCost / Double(costDataPoints.count)
+            costSummary = CostSummary(totalCost: totalCost, averageCost: avgCost)
+        } else {
+            costDataPoints = []
+            costSummary = nil
+        }
 
         // Linear regression over indexed data points
         let n = Double(points.count)
