@@ -20,6 +20,9 @@ struct VisualizationView: View {
             VStack(spacing: AppTheme.Spacing.md) {
                 meterTypePicker
                 controlsRow
+                if viewModel.timeRange == .custom {
+                    customRangeRow
+                }
                 if viewModel.hasEnoughData {
                     chartSection
                     if let summary = viewModel.summary {
@@ -43,11 +46,14 @@ struct VisualizationView: View {
             readings.nsPredicate = MeterReading.scopedPredicate(userId: authService.currentUserId)
             recompute()
         }
-        .onChange(of: viewModel.selectedType) { recompute() }
-        .onChange(of: viewModel.grouping) { recompute() }
-        .onChange(of: viewModel.timeRange) { recompute() }
-        .onChange(of: readings.count) { recompute() }
-        .onChange(of: appLanguage) { recompute() }
+        .onChange(of: viewModel.selectedType)    { recompute() }
+        .onChange(of: viewModel.timeRange)       { recompute() }
+        .onChange(of: viewModel.customStartYear) { recompute() }
+        .onChange(of: viewModel.customStartMonth){ recompute() }
+        .onChange(of: viewModel.customEndYear)   { recompute() }
+        .onChange(of: viewModel.customEndMonth)  { recompute() }
+        .onChange(of: readings.count)            { recompute() }
+        .onChange(of: appLanguage)               { recompute() }
     }
 
     // MARK: - Meter Type Picker
@@ -64,21 +70,61 @@ struct VisualizationView: View {
     // MARK: - Controls Row
 
     private var controlsRow: some View {
-        HStack(spacing: AppTheme.Spacing.sm) {
-            Picker(L10n.consumption, selection: $viewModel.grouping) {
-                ForEach(TimeGrouping.allCases, id: \.rawValue) { g in
-                    Text(g.displayName).tag(g)
-                }
+        Picker(L10n.period, selection: $viewModel.timeRange) {
+            ForEach(TimeRange.allCases, id: \.rawValue) { r in
+                Text(r.displayName).tag(r)
             }
-            .pickerStyle(.segmented)
-
-            Picker(L10n.period, selection: $viewModel.timeRange) {
-                ForEach(TimeRange.allCases, id: \.rawValue) { r in
-                    Text(r.displayName).tag(r)
-                }
-            }
-            .pickerStyle(.segmented)
         }
+        .pickerStyle(.segmented)
+    }
+
+    // MARK: - Custom Range Row
+
+    private var customRangeRow: some View {
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: Date())
+        let years = Array((currentYear - 10)...currentYear)
+        let monthSymbols = DateFormatter().monthSymbols ?? (1...12).map { "\($0)" }
+
+        return VStack(spacing: AppTheme.Spacing.xs) {
+            HStack {
+                Text(L10n.from)
+                    .frame(width: 40, alignment: .leading)
+                Picker("", selection: $viewModel.customStartMonth) {
+                    ForEach(1...12, id: \.self) { m in
+                        Text(monthSymbols[m - 1]).tag(m)
+                    }
+                }
+                .pickerStyle(.menu)
+                Picker("", selection: $viewModel.customStartYear) {
+                    ForEach(years, id: \.self) { y in
+                        Text(String(y)).tag(y)
+                    }
+                }
+                .pickerStyle(.menu)
+                Spacer()
+            }
+            HStack {
+                Text(L10n.to)
+                    .frame(width: 40, alignment: .leading)
+                Picker("", selection: $viewModel.customEndMonth) {
+                    ForEach(1...12, id: \.self) { m in
+                        Text(monthSymbols[m - 1]).tag(m)
+                    }
+                }
+                .pickerStyle(.menu)
+                Picker("", selection: $viewModel.customEndYear) {
+                    ForEach(years, id: \.self) { y in
+                        Text(String(y)).tag(y)
+                    }
+                }
+                .pickerStyle(.menu)
+                Spacer()
+            }
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.surfaceBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
     }
 
     // MARK: - Chart
@@ -103,7 +149,7 @@ struct VisualizationView: View {
 
     private func summaryCard(_ summary: ConsumptionSummary) -> some View {
         let unit = viewModel.selectedType.unit
-        let groupLabel = viewModel.grouping.displayName
+        let groupLabel = L10n.month
 
         return VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
             Text("\(L10n.period): \(summary.periodLabel)")

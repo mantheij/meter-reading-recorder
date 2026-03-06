@@ -177,6 +177,9 @@ struct L10n {
     }
     static var period: String { s("Zeitraum", "Period") }
     static var vsLastPeriod: String { s("ggü. Vorperiode", "vs last period") }
+    static var custom: String      { s("Benutzerdefiniert", "Custom") }
+    static var from: String        { s("Von", "From") }
+    static var to: String          { s("Bis", "To") }
 
     // MARK: Sync
     static var syncing: String { s("Synchronisiere…", "Syncing…") }
