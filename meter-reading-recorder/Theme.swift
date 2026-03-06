@@ -23,14 +23,14 @@ enum AppTheme {
     // MARK: Adaptive Colors
     static let accentPrimary = Color(
         UIColor { $0.userInterfaceStyle == .dark
-            ? UIColor(red: 0/255, green: 180/255, blue: 190/255, alpha: 1)
+            ? UIColor(red: 0/255, green: 240/255, blue: 250/255, alpha: 1)
             : UIColor(red: 36/255, green: 158/255, blue: 148/255, alpha: 1)
         }
     )
 
     static let accentSecondary = Color(
         UIColor { $0.userInterfaceStyle == .dark
-            ? UIColor(red: 140/255, green: 220/255, blue: 210/255, alpha: 1)
+            ? UIColor(red: 190/255, green: 252/255, blue: 245/255, alpha: 1)
             : UIColor(red: 0/255, green: 84/255, blue: 97/255, alpha: 1)
         }
     )

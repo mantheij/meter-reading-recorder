@@ -41,13 +41,13 @@ extension Color {
     static let meterAccent3 = Color(red: 36/255, green: 158/255, blue: 148/255) // #249E94
     static let meterAccent4 = Color(red: 59/255, green: 193/255, blue: 168/255) // #3BC1A8
 
-    // Dark mode accent palette (higher contrast against dark backgrounds)
-    static let darkMeterAccentPrimary = Color(red: 0/255, green: 180/255, blue: 190/255) // teal-cyan, bright for buttons
-    static let darkMeterAccentSecondary = Color(red: 140/255, green: 220/255, blue: 210/255) // softer accent for text/details
-    static let darkMeterAccent1 = Color(red: 20/255, green: 110/255, blue: 120/255)
-    static let darkMeterAccent2 = Color(red: 16/255, green: 140/255, blue: 150/255)
-    static let darkMeterAccent3 = Color(red: 0/255, green: 170/255, blue: 160/255)
-    static let darkMeterAccent4 = Color(red: 0/255, green: 200/255, blue: 180/255)
+    // Dark mode accent palette (high contrast against dark backgrounds)
+    static let darkMeterAccentPrimary = Color(red: 0/255, green: 240/255, blue: 250/255) // electric teal-cyan for buttons
+    static let darkMeterAccentSecondary = Color(red: 190/255, green: 252/255, blue: 245/255) // bright soft accent
+    static let darkMeterAccent1 = Color(red: 110/255, green: 220/255, blue: 240/255)
+    static let darkMeterAccent2 = Color(red: 70/255, green: 238/255, blue: 235/255)
+    static let darkMeterAccent3 = Color(red: 45/255, green: 248/255, blue: 220/255)
+    static let darkMeterAccent4 = Color(red: 20/255, green: 255/255, blue: 230/255)
 }
 
 // MARK: - Corner Radius Extension

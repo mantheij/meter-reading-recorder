@@ -90,6 +90,10 @@ class VisualizationViewModel {
     var hasEnoughData: Bool = false
     var costDataPoints: [ConsumptionDataPoint] = []
     var costSummary: CostSummary?
+    var rawReadingPoints: [ConsumptionDataPoint] = []
+    var rawTrendLine: [ConsumptionDataPoint] = []
+    var rawTrendDirection: TrendDirection = .stable
+    var rawTrendSlope: Double = 0
 
     func compute(readings: [MeterReading], pricePerUnit: Double = 0) {
         let calendar = Calendar.current
@@ -128,6 +132,10 @@ class VisualizationViewModel {
             hasEnoughData = false
             costDataPoints = []
             costSummary = nil
+            rawReadingPoints = []
+            rawTrendLine = []
+            rawTrendDirection = .stable
+            rawTrendSlope = 0
             return
         }
 
@@ -220,6 +228,50 @@ class VisualizationViewModel {
             ],
             direction: direction
         )
+
+        // Raw meter readings (actual counter values, not differences)
+        rawReadingPoints = rangeFiltered.compactMap { reading in
+            guard let date = reading.date,
+                  let val = Double(reading.value?.replacingOccurrences(of: ",", with: ".") ?? "") else { return nil }
+            return ConsumptionDataPoint(
+                label: formatPeriodLabel(for: date, formatter: dateFormatter),
+                value: val,
+                date: date
+            )
+        }
+
+        let rn = Double(rawReadingPoints.count)
+        if rn >= 2 {
+            let rmeanX = (rn - 1) / 2.0
+            let rmeanY = rawReadingPoints.reduce(0) { $0 + $1.value } / rn
+            var rnum = 0.0, rden = 0.0
+            for (i, p) in rawReadingPoints.enumerated() {
+                let dx = Double(i) - rmeanX
+                rnum += dx * (p.value - rmeanY)
+                rden += dx * dx
+            }
+            let rSlope = rden != 0 ? rnum / rden : 0
+            let rIntercept = rmeanY - rSlope * rmeanX
+            rawTrendSlope = rSlope
+
+            let rThreshold = rmeanY * 0.005
+            rawTrendDirection = rSlope > rThreshold ? .increasing
+                              : rSlope < -rThreshold ? .decreasing
+                              : .stable
+
+            rawTrendLine = [
+                ConsumptionDataPoint(label: rawReadingPoints.first!.label,
+                                     value: rIntercept,
+                                     date: rawReadingPoints.first!.date),
+                ConsumptionDataPoint(label: rawReadingPoints.last!.label,
+                                     value: rIntercept + rSlope * (rn - 1),
+                                     date: rawReadingPoints.last!.date)
+            ]
+        } else {
+            rawTrendLine = []
+            rawTrendDirection = .stable
+            rawTrendSlope = 0
+        }
 
         // Build summary
         let totalConsumption = points.reduce(0) { $0 + $1.value }

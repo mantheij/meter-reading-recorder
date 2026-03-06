@@ -35,6 +35,7 @@ struct VisualizationView: View {
                     if let trend = viewModel.trend {
                         trendSection(trend)
                     }
+                    rawReadingChartSection
                     if !viewModel.costDataPoints.isEmpty {
                         costChartSection
                         if let cs = viewModel.costSummary {
@@ -253,6 +254,62 @@ struct VisualizationView: View {
                 Text("\(slopeFormatted) \(unit)/\(L10n.month)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+            }
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.surfaceBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
+    }
+
+    // MARK: - Raw Reading Chart
+
+    private var rawReadingChartSection: some View {
+        let unit = viewModel.selectedType.unit
+        let dirColor = trendDirectionColor(viewModel.rawTrendDirection)
+        let dirIcon  = trendDirectionIcon(viewModel.rawTrendDirection)
+        let dirLabel = trendDirectionLabel(viewModel.rawTrendDirection)
+
+        return VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            Text(L10n.rawMeterReadings)
+                .font(.headline)
+
+            Chart {
+                ForEach(viewModel.rawReadingPoints) { point in
+                    LineMark(
+                        x: .value(L10n.period, point.date),
+                        y: .value(unit, point.value)
+                    )
+                    .foregroundStyle(accentColor)
+                    .symbol(Circle())
+                    .symbolSize(40)
+                }
+                ForEach(viewModel.rawTrendLine) { point in
+                    LineMark(
+                        x: .value(L10n.period, point.date),
+                        y: .value(unit, point.value)
+                    )
+                    .foregroundStyle(dirColor)
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [6, 3]))
+                }
+            }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .month)) { _ in
+                    AxisValueLabel(format: .dateTime.month(.abbreviated).year(.twoDigits))
+                }
+            }
+            .chartYAxisLabel(unit)
+            .frame(height: 220)
+
+            if !viewModel.rawTrendLine.isEmpty {
+                HStack {
+                    Image(systemName: dirIcon).foregroundColor(dirColor)
+                    Text(dirLabel).font(.subheadline).foregroundColor(dirColor)
+                    Spacer()
+                    Text(String(format: "%+.2f %@/\(L10n.month)", viewModel.rawTrendSlope, unit))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
             }
         }
         .padding(AppTheme.Spacing.md)

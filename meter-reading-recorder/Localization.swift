@@ -190,6 +190,7 @@ struct L10n {
     static var totalCost: String       { s("Gesamtkosten",     "Total Cost") }
     static var avgCostPerMonth: String { s("Ø Kosten/Monat",  "Avg. Cost/Month") }
     static var costChart: String       { s("Kostenverlauf",    "Cost Chart") }
+    static var rawMeterReadings: String { s("Zählerstand-Verlauf", "Meter Reading History") }
     static var currencySymbol: String  { s("€",               "€") }
 
     // MARK: Sync
