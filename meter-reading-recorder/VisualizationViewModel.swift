@@ -17,6 +17,22 @@ struct ConsumptionSummary {
     let trendPercent: Double?
 }
 
+struct TrendLinePoint: Identifiable {
+    let id = UUID()
+    let index: Double
+    let value: Double
+}
+
+enum TrendDirection {
+    case increasing, decreasing, stable
+}
+
+struct ConsumptionTrend {
+    let slope: Double
+    let trendLine: [TrendLinePoint]
+    let direction: TrendDirection
+}
+
 enum TimeRange: Int, CaseIterable {
     case threeMonths, sixMonths, twelveMonths, all, custom
 
@@ -65,6 +81,7 @@ class VisualizationViewModel {
 
     var dataPoints: [ConsumptionDataPoint] = []
     var summary: ConsumptionSummary?
+    var trend: ConsumptionTrend?
     var hasEnoughData: Bool = false
 
     func compute(readings: [MeterReading]) {
@@ -100,6 +117,7 @@ class VisualizationViewModel {
         guard rangeFiltered.count >= 2 else {
             dataPoints = []
             summary = nil
+            trend = nil
             hasEnoughData = false
             return
         }
@@ -152,6 +170,34 @@ class VisualizationViewModel {
         }
 
         dataPoints = points
+
+        // Linear regression over indexed data points
+        let n = Double(points.count)
+        let meanX = (n - 1) / 2.0
+        let meanY = points.reduce(0) { $0 + $1.value } / n
+
+        var num = 0.0, den = 0.0
+        for (i, p) in points.enumerated() {
+            let dx = Double(i) - meanX
+            num += dx * (p.value - meanY)
+            den += dx * dx
+        }
+        let slope = den != 0 ? num / den : 0
+        let intercept = meanY - slope * meanX
+
+        let threshold = meanY * 0.02
+        let direction: TrendDirection = slope > threshold ? .increasing
+                                       : slope < -threshold ? .decreasing
+                                       : .stable
+
+        trend = ConsumptionTrend(
+            slope: slope,
+            trendLine: [
+                TrendLinePoint(index: 0,       value: intercept),
+                TrendLinePoint(index: n - 1,   value: intercept + slope * (n - 1))
+            ],
+            direction: direction
+        )
 
         // Build summary
         let totalConsumption = points.reduce(0) { $0 + $1.value }

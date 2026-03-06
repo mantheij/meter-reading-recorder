@@ -28,6 +28,9 @@ struct VisualizationView: View {
                     if let summary = viewModel.summary {
                         summaryCard(summary)
                     }
+                    if let trend = viewModel.trend {
+                        trendSection(trend)
+                    }
                 } else {
                     EmptyStateView(
                         icon: "chart.bar",
@@ -127,11 +130,15 @@ struct VisualizationView: View {
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
     }
 
+    // MARK: - Accent Color
+
+    private var accentColor: Color {
+        AppTheme.meterAccent(for: MeterType.allCases.firstIndex(of: viewModel.selectedType) ?? 0)
+    }
+
     // MARK: - Chart
 
     private var chartSection: some View {
-        let accentColor = AppTheme.meterAccent(for: MeterType.allCases.firstIndex(of: viewModel.selectedType) ?? 0)
-
         return Chart(viewModel.dataPoints) { point in
             BarMark(
                 x: .value(L10n.period, point.label),
@@ -189,6 +196,58 @@ struct VisualizationView: View {
         .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
     }
 
+    // MARK: - Trend Card
+
+    private func trendSection(_ trend: ConsumptionTrend) -> some View {
+        let unit = viewModel.selectedType.unit
+        let dirColor = trendDirectionColor(trend.direction)
+        let dirIcon  = trendDirectionIcon(trend.direction)
+        let dirLabel = trendDirectionLabel(trend.direction)
+        let slopeFormatted = String(format: "%+.2f", trend.slope)
+
+        return VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            Text(L10n.consumptionTrend)
+                .font(.headline)
+
+            Chart {
+                ForEach(Array(viewModel.dataPoints.enumerated()), id: \.offset) { i, point in
+                    BarMark(
+                        x: .value("Index", Double(i)),
+                        y: .value(L10n.consumption, point.value)
+                    )
+                    .foregroundStyle(accentColor.opacity(0.25))
+                }
+                ForEach(trend.trendLine) { pt in
+                    LineMark(
+                        x: .value("Index", pt.index),
+                        y: .value(L10n.consumption, pt.value)
+                    )
+                    .foregroundStyle(dirColor)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                }
+            }
+            .chartXAxis(.hidden)
+            .chartYAxisLabel(unit)
+            .frame(height: 100)
+
+            HStack {
+                Image(systemName: dirIcon)
+                    .foregroundColor(dirColor)
+                Text(dirLabel)
+                    .font(.subheadline)
+                    .foregroundColor(dirColor)
+                Spacer()
+                Text("\(slopeFormatted) \(unit)/\(L10n.month)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.surfaceBackground)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+        .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 2)
+    }
+
     // MARK: - Helpers
 
     private func recompute() {
@@ -205,5 +264,29 @@ struct VisualizationView: View {
         if percent > 1 { return .red }
         if percent < -1 { return .green }
         return .secondary
+    }
+
+    private func trendDirectionColor(_ d: TrendDirection) -> Color {
+        switch d {
+        case .increasing: return .red
+        case .decreasing: return .green
+        case .stable:     return .secondary
+        }
+    }
+
+    private func trendDirectionIcon(_ d: TrendDirection) -> String {
+        switch d {
+        case .increasing: return "arrow.up.right"
+        case .decreasing: return "arrow.down.right"
+        case .stable:     return "arrow.right"
+        }
+    }
+
+    private func trendDirectionLabel(_ d: TrendDirection) -> String {
+        switch d {
+        case .increasing: return L10n.trendIncreasing
+        case .decreasing: return L10n.trendDecreasing
+        case .stable:     return L10n.trendStable
+        }
     }
 }

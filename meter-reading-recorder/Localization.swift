@@ -180,6 +180,10 @@ struct L10n {
     static var custom: String      { s("Benutzerdefiniert", "Custom") }
     static var from: String        { s("Von", "From") }
     static var to: String          { s("Bis", "To") }
+    static var consumptionTrend: String { s("Verbrauchstrend", "Consumption Trend") }
+    static var trendIncreasing:  String { s("Steigend",        "Increasing") }
+    static var trendDecreasing:  String { s("Sinkend",         "Decreasing") }
+    static var trendStable:      String { s("Stabil",          "Stable") }
 
     // MARK: Sync
     static var syncing: String { s("Synchronisiere…", "Syncing…") }
