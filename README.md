@@ -16,4 +16,7 @@
 
 ## Record Meter Readings manually or by Camera, Visualize your Consumption
 <img width="388.8" height="583.2" alt="979_1x_shots_so" src="https://github.com/user-attachments/assets/b26ece7e-9adb-4870-8be1-3eb5c9362f52" />
-<img width="388.8" height="583.2" alt="380_1x_shots_so" src="https://github.com/user-attachments/assets/06a6a9b9-7932-4ab9-b4e4-34b426b41e81" />
+<img width="388.8" height="583.2" alt="934shots_so" src="https://github.com/user-attachments/assets/acd15e32-a56a-41f5-b3b2-52ad0502a8c2" />
+
+<img width="388.8" height="583.2" alt="295shots_so" src="https://github.com/user-attachments/assets/ea50c247-d315-48e1-b55c-176aba0006b5" />
+<img width="388.8" height="583.2" alt="666shots_so" src="https://github.com/user-attachments/assets/1789ae89-8d20-4cb2-9486-6f07944f9bce" />
