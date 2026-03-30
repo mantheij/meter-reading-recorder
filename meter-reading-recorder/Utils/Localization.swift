@@ -51,6 +51,11 @@ struct L10n {
     static var meterReadings: String { s("Zählerstände", "Meter Readings") }
     static var captureMeterReading: String { s("Zählerstand erfassen", "Capture Meter Reading") }
 
+    // MARK: OCR Number Selection
+    static var selectMeterReadingTitle: String { s("Zählerstand auswählen", "Select Meter Reading") }
+    static var detectedNumbers: String { s("Erkannte Zahlen", "Detected Numbers") }
+    static var useThisReading: String { s("Übernehmen", "Use This Reading") }
+
     // MARK: OCR Alerts
     static var recognitionSuccessful: String { s("Erkennung erfolgreich", "Recognition Successful") }
     static var retakePhoto: String { s("Erneut fotografieren", "Retake Photo") }
@@ -60,6 +65,7 @@ struct L10n {
     static var recognizedNumberUnavailable: String {
         s("Erkannte Zahl ist nicht verfügbar.", "Recognized number is not available.")
     }
+    static var recognitionInProgress: String { s("Erkennung läuft…", "Recognizing…") }
     static var recognitionFailed: String { s("Erkennung fehlgeschlagen", "Recognition Failed") }
     static var recognitionFailedMessage: String {
         s("Die Zahl konnte nicht erkannt werden. Bitte erneut fotografieren.",

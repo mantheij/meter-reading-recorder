@@ -7,7 +7,7 @@ struct ValueFormatter {
         var filtered = input.trimmingCharacters(in: .whitespacesAndNewlines)
         filtered = filtered.replacingOccurrences(of: ",", with: ".")
         filtered = filtered.components(separatedBy: CharacterSet(charactersIn: "0123456789.").inverted).joined()
-        if let firstDot = filtered.firstIndex(of: ".") {
+        if let firstDot = filtexred.firstIndex(of: ".") {
             let after = filtered[filtered.index(after: firstDot)...].replacingOccurrences(of: ".", with: "")
             filtered = String(filtered[..<filtered.index(after: firstDot)]) + after
         }

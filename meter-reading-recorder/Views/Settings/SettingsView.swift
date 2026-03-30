@@ -27,12 +27,6 @@ struct SettingsView: View {
                 .labelsHidden()
             }
 
-            Section(header: Text(L10n.tariffs)) {
-                tariffRow(type: .water,       binding: $waterPriceStr)
-                tariffRow(type: .electricity, binding: $electricityPriceStr)
-                tariffRow(type: .gas,         binding: $gasPriceStr)
-            }
-
             Section(header: Text(L10n.language)) {
                 Picker(L10n.language, selection: $languageRaw) {
                     ForEach(AppLanguage.allCases, id: \.rawValue) { lang in
@@ -41,6 +35,12 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+            }
+
+            Section(header: Text(L10n.tariffs)) {
+                tariffRow(type: .water,       binding: $waterPriceStr)
+                tariffRow(type: .electricity, binding: $electricityPriceStr)
+                tariffRow(type: .gas,         binding: $gasPriceStr)
             }
         }
         .navigationTitle(L10n.settings)

@@ -8,13 +8,14 @@ struct ContentView: View {
     @EnvironmentObject private var authService: AuthService
 
     @State private var showCamera = false
+    @State private var isProcessingOCR = false
     @State private var recognizedValue: String? = nil
     @State private var capturedImage: UIImage? = nil
     @State private var showTypeSelector = false
-    @State private var showSuccessAlert = false
     @State private var showErrorAlert = false
-    @State private var showEditSheet = false
-    @State private var editedValue: String = ""
+    @State private var showOCRSelection = false
+    @State private var ocrCandidates: [OCRResult] = []
+    @State private var selectedReadingDate = Date()
     @State private var showManualEntry: Bool = false
     @State private var manualValue: String = ""
     @State private var manualDate = Date()
@@ -91,6 +92,45 @@ struct ContentView: View {
                 navigationPath.append(destination)
             }
             .allowsHitTesting(showSidebar)
+
+            // OCR selection is shown as a ZStack overlay to avoid chaining three
+            // fullScreenCover modifiers (which causes blank white screens on iOS).
+            if showOCRSelection, let img = capturedImage {
+                OCRNumberSelectionView(
+                    image: img,
+                    candidates: ocrCandidates,
+                    onSelect: { value, date in
+                        recognizedValue = value
+                        selectedReadingDate = date
+                        showOCRSelection = false
+                        showTypeSelector = true
+                    },
+                    onRetake: {
+                        showOCRSelection = false
+                        capturedImage = nil
+                        ocrCandidates = []
+                        showCamera = true
+                    }
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(.systemBackground).ignoresSafeArea())
+                .zIndex(10)
+            }
+
+            if isProcessingOCR {
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .zIndex(11)
+                VStack(spacing: AppTheme.Spacing.md) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .tint(.white)
+                    Text(L10n.recognitionInProgress)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+                .zIndex(12)
+            }
         }
         .onChange(of: authService.isAuthenticated) { _, _ in
             navigationPath = NavigationPath()
@@ -128,30 +168,11 @@ struct ContentView: View {
         .animation(.easeInOut, value: showLoginToast)
         .fullScreenCover(isPresented: $showCamera) {
             CameraView { image in
+                capturedImage = image
                 processImage(image)
             }
             .ignoresSafeArea()
         }
-        .alert(L10n.recognitionSuccessful, isPresented: $showSuccessAlert, actions: {
-            Button(L10n.confirm) {
-                showTypeSelector = true
-            }
-            Button(L10n.edit) {
-                editedValue = recognizedValue ?? ""
-                showEditSheet = true
-            }
-            Button(L10n.retakePhoto, role: .cancel) {
-                recognizedValue = nil
-                capturedImage = nil
-                showCamera = true
-            }
-        }, message: {
-            if let value = recognizedValue {
-                Text(L10n.recognizedNumber(value))
-            } else {
-                Text(L10n.recognizedNumberUnavailable)
-            }
-        })
         .alert(L10n.recognitionFailed, isPresented: $showErrorAlert, actions: {
             Button(L10n.retakePhoto) {
                 recognizedValue = nil
@@ -162,22 +183,6 @@ struct ContentView: View {
         }, message: {
             Text(L10n.recognitionFailedMessage)
         })
-        .sheet(isPresented: $showEditSheet) {
-            MeterReadingFormSheet(
-                title: L10n.editRecognizedValue,
-                image: capturedImage,
-                value: $editedValue,
-                confirmTitle: L10n.apply,
-                onCancel: { showEditSheet = false },
-                onConfirm: {
-                    if let sanitized = ValueFormatter.sanitizeMeterValue(editedValue) {
-                        recognizedValue = sanitized
-                        showEditSheet = false
-                        showTypeSelector = true
-                    }
-                }
-            )
-        }
         .sheet(isPresented: $showManualEntry) {
             MeterReadingFormSheet(
                 title: L10n.manualEntry,
@@ -188,6 +193,7 @@ struct ContentView: View {
                 onConfirm: {
                     if let sanitized = ValueFormatter.sanitizeMeterValue(manualValue) {
                         recognizedValue = sanitized
+                        selectedReadingDate = manualDate
                         capturedImage = nil
                         showManualEntry = false
                         showTypeSelector = true
@@ -200,8 +206,7 @@ struct ContentView: View {
                 Button(type.displayName) {
                     if let value = recognizedValue {
                         let image = capturedImage ?? UIImage()
-                        let date = capturedImage == nil ? manualDate : Date()
-                        saveReading(value: value, type: type, image: image, date: date)
+                        saveReading(value: value, type: type, image: image, date: selectedReadingDate)
                     }
                     recognizedValue = nil
                     capturedImage = nil
@@ -218,15 +223,20 @@ struct ContentView: View {
     }
 
     func processImage(_ image: UIImage) {
-        OCRService.recognizeText(in: image) { recognizedNumber in
-            if let number = recognizedNumber {
-                recognizedValue = number
-                capturedImage = image
-                showSuccessAlert = true
-            } else {
-                recognizedValue = nil
-                capturedImage = nil
-                showErrorAlert = true
+        isProcessingOCR = true
+        DispatchQueue.global(qos: .userInitiated).async {
+            OCRService.recognizeAllCandidates(in: image) { candidates in
+                DispatchQueue.main.async {
+                    isProcessingOCR = false
+                    ocrCandidates = candidates
+                    selectedReadingDate = Date()
+                    if candidates.isEmpty {
+                        capturedImage = nil
+                        showErrorAlert = true
+                    } else {
+                        showOCRSelection = true
+                    }
+                }
             }
         }
     }
@@ -253,3 +263,4 @@ struct ContentView: View {
         try? viewContext.save()
     }
 }
+
